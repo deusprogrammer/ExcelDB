@@ -1,0 +1,47 @@
+EXCEL PARSING ALGORITHM
+   1.) Make an initial pass to try to identify the columns.
+   2.) If a row has even one label in it, count it as a label row
+   3.) If all column types are found, you can stop searching the spreadsheet.
+   4.) If not all column types are found, you must look for rows that look like
+         they contain data and try to parse them with regexs to determine each
+         columns type.
+   5.) If there is still no certainty about column types, this Excel file will be
+         returned to the user.  The user must then label the columns manually.
+   6.) On the second pass take the columns with the highest votes for the column
+         types and take the data from the non-discarded sets and place it in the
+         database.
+      
+VIEWS
+   1.) Upload page for excel spreadsheets or zip files 
+         containing zip files
+   2.) Views for adding words to the reserved words 
+         list (for finding labels)
+   3.) Views for rules (regex expressions that describe 
+         cell data)
+   4.) Views for the excel database
+   5.) Views for manually labeling the columns of a
+         spreadsheet.
+   6.) A page to request an Excel Spreadsheet (with 
+         filter checkboxes and search field).
+
+RULES FOR DISCARDING ROWS
+   If a row has many cells, but less than 3 non-empty columns.  Discard it.
+      +Corallary: If the elements contain strings that match one of the rules we 
+      have for labeling columns, vote for that column.
+   
+RULES FOR VOTING
+   The first row you come across that has nothing but alphabetical characters
+      and words from the label list is marking the columns of the spread sheet.  
+      The votes for this line should eliminate the need to do any regex parsing.
+   
+RULES FOR FILE NAMING
+   The name of the file must reflect the vendor name as you want it to appear in
+      the DB.
+   
+METHODS OF UPLOADING
+   You can upload one at a time or upload a zip file.
+
+NOTES
+   USING ZIP4J
+      ZipFile zip = new ZipFile("name.zip")
+      zip.extractAll("folder/")
