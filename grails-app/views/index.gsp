@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta name="layout" content="main"/>
-		<title>Welcome to Grails</title>
+		<title>Welcome to ExcelDB</title>
 		<style type="text/css" media="screen">
 			#status {
 				background-color: #eee;
@@ -43,6 +43,11 @@
 			#page-body {
 				margin: 2em 1em 1.25em 18em;
 			}
+                        
+                        div.sub-item {
+                          position: relative;
+                          left: 20px;
+                        }
 
 			h2 {
 				margin-top: 1em;
@@ -103,20 +108,36 @@
 			</ul>
 		</div>
 		<div id="page-body" role="main">
-			<h1>Welcome to Grails</h1>
-			<p>Congratulations, you have successfully started your first Grails application! At the moment
-			   this is the default page, feel free to modify it to either redirect to a controller or display whatever
-			   content you may choose. Below is a list of controllers that are currently deployed in this application,
-			   click on each to execute its default action:</p>
+			<h1>Welcome to ExcelDB</h1>
+			<p>This web application will extract product information from a Microsoft Excel file and insert that information into a GORM database.  Then at any time an Excel representation of that file can be requested.</p>
 
-			<div id="controller-list" role="navigation">
-				<h2>Available Controllers:</h2>
-				<ul>
-					<g:each var="c" in="${grailsApplication.controllerClasses.sort { it.fullName } }">
-						<li class="controller"><g:link controller="${c.logicalPropertyName}">${c.fullName}</g:link></li>
-					</g:each>
-				</ul>
-			</div>
+                        <h3>Upload zip file:</h3>
+                        <div class="sub-item">
+                          <fileuploader:form upload="zip" 
+                            successAction="success"
+                            successController="zip"
+                            errorAction="error"
+                            errorController="zip"/>
+                        </div>
+                        
+                        <h3>Upload Excel file:</h3>
+                        <div class="sub-item">
+                          <fileuploader:form upload="excel" 
+                            successAction="success"
+                            successController="zip"
+                            errorAction="error"
+                            errorController="zip"/>
+                        </div>
+                        
+                        <h3>View Product Database</h3>
+                        <div class="sub-item">
+                          <g:link controller="product" action="list">Product List</g:link>
+                        </div>
+              
+                        <h3>View Pending Jobs</h3>
+                        <div class="sub-item">
+                          <g:link controller="excelJob" action="list">Jobs List</g:link>
+                        </div>
 		</div>
 	</body>
 </html>

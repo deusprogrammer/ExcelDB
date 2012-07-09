@@ -91,3 +91,16 @@ log4j = {
            'org.hibernate',
            'net.sf.ehcache.hibernate'
 }
+
+fileuploader {
+	zip {
+		maxSize = 1024 * 1024 * 100 //100MB
+		allowedExtensions = ["zip"]
+		path = "c:/tmp/zips"
+	}
+	excel {
+		maxSize = 1024 * 1024 * 4 //4 mbytes
+		allowedExtensions = ["xls", "xlsx"]
+		path = "c:/tmp/excel"
+	}
+}

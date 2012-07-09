@@ -26,7 +26,7 @@ class ProductController {
             return
         }
 
-		flash.message = message(code: 'default.created.message', args: [message(code: 'product.label', default: 'Product'), productInstance.id])
+        flash.message = message(code: 'default.created.message', args: [message(code: 'product.label', default: 'Product'), productInstance.id])
         redirect(action: "show", id: productInstance.id)
     }
 
