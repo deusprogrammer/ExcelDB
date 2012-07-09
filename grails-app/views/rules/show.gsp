@@ -23,6 +23,24 @@
 			</g:if>
 			<ol class="property-list rules">
 			
+				<g:if test="${rulesInstance?.columnName}">
+				<li class="fieldcontain">
+					<span id="columnName-label" class="property-label"><g:message code="rules.columnName.label" default="Column Name" /></span>
+					
+						<span class="property-value" aria-labelledby="columnName-label"><g:fieldValue bean="${rulesInstance}" field="columnName"/></span>
+					
+				</li>
+				</g:if>
+			
+				<g:if test="${rulesInstance?.rules}">
+				<li class="fieldcontain">
+					<span id="rules-label" class="property-label"><g:message code="rules.rules.label" default="Rules" /></span>
+					
+						<span class="property-value" aria-labelledby="rules-label"><g:fieldValue bean="${rulesInstance}" field="rules"/></span>
+					
+				</li>
+				</g:if>
+			
 			</ol>
 			<g:form>
 				<fieldset class="buttons">

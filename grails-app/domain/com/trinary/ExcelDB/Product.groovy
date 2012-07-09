@@ -28,5 +28,6 @@ class Product {
     }
 
     static constraints = {
+        productNumber unique: true
     }
 }

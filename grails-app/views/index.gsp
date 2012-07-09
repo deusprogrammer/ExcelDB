@@ -124,9 +124,9 @@
                         <div class="sub-item">
                           <fileuploader:form upload="excel" 
                             successAction="success"
-                            successController="zip"
+                            successController="excel"
                             errorAction="error"
-                            errorController="zip"/>
+                            errorController="excel"/>
                         </div>
                         
                         <h3>View Product Database</h3>
@@ -137,6 +137,12 @@
                         <h3>View Pending Jobs</h3>
                         <div class="sub-item">
                           <g:link controller="excelJob" action="list">Jobs List</g:link>
+                        </div>
+                        
+                         <h3>Settings</h3>
+                        <div class="sub-item">
+                          <g:link controller="keywords" action="list">Keywords</g:link><br/>
+                          <g:link controller="rules" action="list">Rules</g:link>
                         </div>
 		</div>
 	</body>

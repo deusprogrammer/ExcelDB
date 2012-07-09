@@ -10,14 +10,48 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 class ExcelService {
     def backgroundService
     
-    ExcelLabel getLabelType(def string) {
-        if (isProductNumber(string)) {
+    def position(def s, def l) {
+        for(def i = 0; i < l.size(); i++) {
+            if (l[i].equals(s.toLowerCase())) {
+                return i
+            }
+        }
+
+        return -1
+    }
+
+    def precedes (def s1, def s2, def l) {
+        def s1Pos = position(s1, l)
+        def s2Pos = position(s2, l)
+        
+        if (s2.equals("") && s1Pos != -1)
+            return true
+
+        if (s1Pos == -1 || s2Pos == -1)
+            return false
+
+        if (s1Pos < s2Pos) {
+            return true
+        }
+        else if (s2Pos >= s1Pos) {
+            return false
+        }
+    }
+    
+    ExcelLabel getLabelType(def string, def old = null) {
+        if (!old) {
+            old = [productNumber: "", productDescription: "", productPrice: ""]
+        }
+        
+        println "OLD IS ${old}"
+        
+        if (isProductNumber(string, old["productNumber"])) {
             return ExcelLabel.PRODUCT_NUMBER
         }
-        else if (isProductDescription(string)) {
+        else if (isProductDescription(string, old["productDescription"])) {
             return ExcelLabel.PRODUCT_DESCRIPTION
         }
-        else if (isProductPrice(string)) {
+        else if (isProductPrice(string, old["productPrice"])) {
             return ExcelLabel.PRODUCT_PRICE
         }
         else {
@@ -25,37 +59,31 @@ class ExcelService {
         }
     }
     
-    def isProductNumber(def string) {
-        def productNumberLabels = ["part", "part number", "product number", "product id", " product name"]
+    def isProductNumber(def string, def old) {
+        //def productNumberLabels = ["part", "part number", "product number", "product id", " product name"]
+        def productNumberLabels = Keywords.getKeywords("productNumber")
         
-        if (productNumberLabels.contains(string.toLowerCase())) {
-            return true
-        }
-        else {
-            return false
-        }
+        //if (productNumberLabels.contains(string.toLowerCase())) {
+        return precedes(string, old, productNumberLabels)
     }
     
-    def isProductDescription(def string) {
-        def productDescriptionLabels = ["description", "desc", "product description", "product information"]
+    def isProductDescription(def string, def old) {
+        //def productDescriptionLabels = ["description", "desc", "product description", "product information"]
+        def productDescriptionLabels = Keywords.getKeywords("productDescription")
         
-        if (productDescriptionLabels.contains(string.toLowerCase())) {
-            return true
-        }
-        else {
-            return false
-        }
+        //if (productDescriptionLabels.contains(string.toLowerCase())) {
+        return precedes(string, old, productDescriptionLabels)
     }
     
-    def isProductPrice(def string) {
-        def productPriceLabels = ["price", "authorized", "authorized price", "msrp", "retail price"]
+    def isProductPrice(def string, def old) {
+        //def productPriceLabels = ["price", "authorized", "authorized price", "msrp", "retail price"]
+        def productPriceLabels = Keywords.getKeywords("productPrice")
         
-        if (productPriceLabels.contains(string.toLowerCase())) {
-            return true
-        }
-        else {
-            return false
-        }
+        println "\tOLD IS ${old}"
+        println "\tSTR IS ${string}"
+        
+        //if (productPriceLabels.contains(string.toLowerCase())) {
+        return precedes(string, old, productPriceLabels)
     }
 
     def processExcelFiles(def fileLocations, def jobName) throws Exception, FileNotFoundException, IOException {
@@ -71,18 +99,24 @@ class ExcelService {
         job.fileName = jobName
         job.nSteps = rowSum
         job.save(flush: true)
+        
+        def failedFiles = []
                 
         backgroundService.execute ("Job ${job.id}", {
             Product p
-            
+                        
             println "ROWS: ${rowSum}"
 
-            fileLocations.each { fileLocation ->
+            //Files
+            for (int k = 0; k < fileLocations.size(); k++) { 
+                def fileLocation = fileLocations[k]
+                
                 println "PROCESSING: ${fileLocation}"
                 Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
                 Sheet sheet = workbook.getSheetAt(0)
 
                 def columnVotes = [productNumber: -1, productDescription: -1, productPrice: -1]
+                def columnLabels = [productNumber: "", productDescription: "", productPrice: ""]
                 def labelFound = false
                 def dataStartIndex = -1
 
@@ -101,18 +135,21 @@ class ExcelService {
 
                         switch (cell.getCellType()) {
                             case Cell.CELL_TYPE_STRING:
-                                switch (getLabelType(cellString)) {
+                                switch (getLabelType(cellString, columnLabels)) {
                                     case ExcelLabel.PRODUCT_NUMBER:
                                         rowIsLabel = true
                                         columnVotes["productNumber"] = j
+                                        columnLabels["productNumber"] = cellString
                                         break
                                     case ExcelLabel.PRODUCT_DESCRIPTION:
                                         rowIsLabel = true
                                         columnVotes["productDescription"] = j
+                                        columnLabels["productDescription"] = cellString
                                         break
                                     case ExcelLabel.PRODUCT_PRICE:
                                         rowIsLabel = true
                                         columnVotes["productPrice"] = j
+                                        columnLabels["productPrice"] = cellString
                                         break
                                 }
                                 break
@@ -162,7 +199,8 @@ class ExcelService {
                 if (columnVotes["productNumber"] == -1 || columnVotes["productDescription"] == -1 || columnVotes["productPrice"] == -1) {
                     println "Unable to identify all columns!"
                     job.setDone("Failed")
-                    return -1
+                    failedFiles += fileLocation
+                    continue
                 }
 
                 //Add excel file to database
@@ -209,6 +247,7 @@ class ExcelService {
 
                     job.incrementStep()
                 }
+                job.incrementStep()
             }
             
             job.setDone("Success")

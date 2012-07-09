@@ -7,13 +7,13 @@
 
 <html>
     <head>
-        <title>Grails File-Uploader Demo</title>
+        <title>Job Created</title>
 		<meta name="layout" content="main" />
     </head>
     <body>
         <h3 style="margin-left:20px;">Jobs Created</h3>
         <p style="margin-left:20px;width:80%">
-			<g:each var="f" in="${files}">
+			<g:each var="job" in="${jobs}">
 				<table>
 					<tr>
 						<td><b>Name</b></td>

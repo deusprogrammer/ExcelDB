@@ -7,7 +7,7 @@
 
 <html>
     <head>
-        <title>Grails File-Uploader Demo</title>
+        <title>Job Created</title>
 		<meta name="layout" content="main" />
     </head>
     <body>

@@ -6,6 +6,7 @@ class ExcelJob {
     Boolean done
     Integer step
     Integer nSteps
+    String failures
     
     ExcelJob() {
         println "Creating new job..."
@@ -18,6 +19,7 @@ class ExcelJob {
     void setDone(def status) {
         done = true
         this.status = status
+        this.step = nSteps
         
         this.save()
     }
@@ -35,5 +37,6 @@ class ExcelJob {
         status()
         step()
         nSteps()
+        failures nullable: true
     }
 }

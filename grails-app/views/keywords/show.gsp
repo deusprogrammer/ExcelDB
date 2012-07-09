@@ -23,6 +23,24 @@
 			</g:if>
 			<ol class="property-list keywords">
 			
+				<g:if test="${keywordsInstance?.columnName}">
+				<li class="fieldcontain">
+					<span id="columnName-label" class="property-label"><g:message code="keywords.columnName.label" default="Column Name" /></span>
+					
+						<span class="property-value" aria-labelledby="columnName-label"><g:fieldValue bean="${keywordsInstance}" field="columnName"/></span>
+					
+				</li>
+				</g:if>
+			
+				<g:if test="${keywordsInstance?.keywords}">
+				<li class="fieldcontain">
+					<span id="keywords-label" class="property-label"><g:message code="keywords.keywords.label" default="Keywords" /></span>
+					
+						<span class="property-value" aria-labelledby="keywords-label"><g:fieldValue bean="${keywordsInstance}" field="keywords"/></span>
+					
+				</li>
+				</g:if>
+			
 			</ol>
 			<g:form>
 				<fieldset class="buttons">

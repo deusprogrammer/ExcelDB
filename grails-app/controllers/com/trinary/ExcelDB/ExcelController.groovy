@@ -13,12 +13,12 @@ class ExcelController {
                 
         if (file) {
             def job = [:]
-            job["id"] = ExcelService.processExcelFiles([file.path])
+            job["id"] = ExcelService.processExcelFiles([file.path], file.name)
             job["file"] = file.path
             jobs += job
         }
         
-        [files: [file.path], params:params]
+        [jobs: jobs]
     }
     
     def error() {
