@@ -43,7 +43,7 @@ class ExcelService {
             old = [productNumber: "", productDescription: "", productPrice: ""]
         }
         
-        println "OLD IS ${old}"
+        //println "OLD IS ${old}"
         
         if (isProductNumber(string, old["productNumber"])) {
             return ExcelLabel.PRODUCT_NUMBER
@@ -79,8 +79,8 @@ class ExcelService {
         //def productPriceLabels = ["price", "authorized", "authorized price", "msrp", "retail price"]
         def productPriceLabels = Keywords.getKeywords("productPrice")
         
-        println "\tOLD IS ${old}"
-        println "\tSTR IS ${string}"
+        //println "\tOLD IS ${old}"
+        //println "\tSTR IS ${string}"
         
         //if (productPriceLabels.contains(string.toLowerCase())) {
         return precedes(string, old, productPriceLabels)
@@ -89,7 +89,7 @@ class ExcelService {
     def processExcelFiles(def fileLocations, def jobName) throws Exception, FileNotFoundException, IOException {
         def rowSum = 0
         fileLocations.each { fileLocation ->
-            println "FILE LOCATION: ${fileLocation}"
+            //println "FILE LOCATION: ${fileLocation}"
             Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
             Sheet sheet = workbook.getSheetAt(0)
             rowSum += sheet.getLastRowNum()
@@ -105,13 +105,13 @@ class ExcelService {
         backgroundService.execute ("Job ${job.id}", {
             Product p
                         
-            println "ROWS: ${rowSum}"
+            //println "ROWS: ${rowSum}"
 
             //Files
             for (int k = 0; k < fileLocations.size(); k++) { 
                 def fileLocation = fileLocations[k]
                 
-                println "PROCESSING: ${fileLocation}"
+                //println "PROCESSING: ${fileLocation}"
                 Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
                 Sheet sheet = workbook.getSheetAt(0)
 
@@ -179,7 +179,7 @@ class ExcelService {
                             println "Columns are identified"
                             if (dataStartIndex == -1) {
                                 dataStartIndex = i
-                                println "Data starts at line ${dataStartIndex}"
+                                //println "Data starts at line ${dataStartIndex}"
                             }
                             break;
                         }

@@ -7,16 +7,16 @@ class Product {
     String productPrice
     
     Product() {
-        println "New Product being added!"
+        //println "New Product being added!"
         productVendor = "Default"
     }
     
     def afterSave() {
-        println "PRODUCT SAVED: "
-        println "\tnumber:      " + productNumber
-        println "\tdescription: " + productDescription
-        println "\tvendor:      " + productVendor
-        println "\tprice:       " + productPrice
+        //println "PRODUCT SAVED: "
+        //println "\tnumber:      " + productNumber
+        //println "\tdescription: " + productDescription
+        //println "\tvendor:      " + productVendor
+        //println "\tprice:       " + productPrice
     }
     
     def afterInsert() {
