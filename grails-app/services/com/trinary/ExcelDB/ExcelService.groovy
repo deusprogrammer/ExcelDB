@@ -110,19 +110,16 @@ class ExcelService {
         }
         
         def failedFiles = []
-                
-        backgroundService.execute ("Job ${jobName}", {
-            Product p
-                        
-            //println "ROWS: ${rowSum}"
 
-            //Files
-            for (int k = 0; k < fileLocations.size(); k++) { 
-                def fileLocation = fileLocations[k]
-                ExcelJob job = ExcelJob.get(jobIds[k])
+        for (int k = 0; k < fileLocations.size(); k++) { 
+            def fileLocation = fileLocations[k]
+            ExcelJob job = ExcelJob.get(jobIds[k])
                 
-                if (!job)
-                    continue
+            if (!job)
+            continue
+        
+            backgroundService.execute ("Job ${job.id}", {
+                Product p
                 
                 println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
                 Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
@@ -228,7 +225,7 @@ class ExcelService {
                     println "Unable to identify all columns!"
                     job.setDone("Failed")
                     failedFiles += fileLocation
-                    continue
+                    return
                 }
 
                 //Add excel file to database
@@ -291,8 +288,8 @@ class ExcelService {
                 }
                 job.incrementStep()
                 job.setDone("Success")
-            }
-        })
+            })
+        }
         
         return jobIds
     }
