@@ -95,14 +95,23 @@ class ExcelService {
             rowSum += sheet.getLastRowNum()
         }
         
-        ExcelJob job = new ExcelJob()
-        job.fileName = jobName
-        job.nSteps = rowSum
-        job.save(flush: true)
+        def jobIds = []
+        fileLocations.eachWithIndex { fileLocation, index ->
+            Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
+            Sheet sheet = workbook.getSheetAt(0)
+            def steps = sheet.getLastRowNum()
+            
+            ExcelJob job = new ExcelJob()
+            job.fileName = fileLocation
+            job.nSteps = steps
+            job.save(flush: true)
+            
+            jobIds += job.id
+        }
         
         def failedFiles = []
                 
-        backgroundService.execute ("Job ${job.id}", {
+        backgroundService.execute ("Job ${jobName}", {
             Product p
                         
             //println "ROWS: ${rowSum}"
@@ -110,8 +119,12 @@ class ExcelService {
             //Files
             for (int k = 0; k < fileLocations.size(); k++) { 
                 def fileLocation = fileLocations[k]
+                ExcelJob job = ExcelJob.get(jobIds[k])
                 
-                //println "PROCESSING: ${fileLocation}"
+                if (!job)
+                    continue
+                
+                println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
                 Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
                 Sheet sheet = workbook.getSheetAt(0)
 
@@ -122,44 +135,57 @@ class ExcelService {
 
                 //Row
                 for (def i = 0; i < sheet.getLastRowNum(); i++) {
-                    Row row = sheet.getRow(i)
-
+                    Row row
                     def rowIsLabel = false
-                    def cellCount = row.getLastCellNum()
+                    def cellCount = 0
                     def emptyCount = 0
+                    
+                    try {
+                        row = sheet.getRow(i)
+                        cellCount = row.getLastCellNum()
+                    }
+                    catch (Exception e) {
+                        println "Row is non existent..."
+                        continue
+                    }
 
                     //Cell
                     for (def j = 0; j < row.getLastCellNum(); j++) {
                         Cell cell = row.getCell(j)
-                        def cellString = cell.toString()
-
-                        switch (cell.getCellType()) {
-                            case Cell.CELL_TYPE_STRING:
-                                switch (getLabelType(cellString, columnLabels)) {
-                                    case ExcelLabel.PRODUCT_NUMBER:
-                                        rowIsLabel = true
-                                        columnVotes["productNumber"] = j
-                                        columnLabels["productNumber"] = cellString
-                                        break
-                                    case ExcelLabel.PRODUCT_DESCRIPTION:
-                                        rowIsLabel = true
-                                        columnVotes["productDescription"] = j
-                                        columnLabels["productDescription"] = cellString
-                                        break
-                                    case ExcelLabel.PRODUCT_PRICE:
-                                        rowIsLabel = true
-                                        columnVotes["productPrice"] = j
-                                        columnLabels["productPrice"] = cellString
-                                        break
-                                }
-                                break
-                            case Cell.CELL_TYPE_NUMERIC:
-                                break
-                            case Cell.CELL_TYPE_BLANK:
-                                emptyCount++
-                                break
-                            default:
-                                break
+                        def cellString = cell.toString().trim()
+                        println "CELL DATA (${i},${j}): ${cellString}"
+                        try {
+                            switch (cell.getCellType()) {
+                                case Cell.CELL_TYPE_STRING:
+                                    switch (getLabelType(cellString, columnLabels)) {
+                                        case ExcelLabel.PRODUCT_NUMBER:
+                                            rowIsLabel = true
+                                            columnVotes["productNumber"] = j
+                                            columnLabels["productNumber"] = cellString
+                                            break
+                                        case ExcelLabel.PRODUCT_DESCRIPTION:
+                                            rowIsLabel = true
+                                            columnVotes["productDescription"] = j
+                                            columnLabels["productDescription"] = cellString
+                                            break
+                                        case ExcelLabel.PRODUCT_PRICE:
+                                            rowIsLabel = true
+                                            columnVotes["productPrice"] = j
+                                            columnLabels["productPrice"] = cellString
+                                            break
+                                    }
+                                    break
+                                case Cell.CELL_TYPE_NUMERIC:
+                                    break
+                                case Cell.CELL_TYPE_BLANK:
+                                    emptyCount++
+                                    break
+                                default:
+                                    break
+                            }
+                        }
+                        catch (Exception e) {
+                            emptyCount++
                         }
                     }
 
@@ -181,12 +207,14 @@ class ExcelService {
                                 dataStartIndex = i
                                 //println "Data starts at line ${dataStartIndex}"
                             }
-                            break;
+                            break
                         }
                         //Data has been found before any kind of label
                         //Parse columns with regex to determine types
                         else {
                             println "\t\tRow appears to contain data"
+                            println "\t\tNo rules found...assuming failure"
+                            break
                         }
                     }
                 }
@@ -205,31 +233,45 @@ class ExcelService {
 
                 //Add excel file to database
                 for (def i = dataStartIndex; i < sheet.getLastRowNum(); i++) {
-                    Row row = sheet.getRow(i)
+                    Row row
                     def rowIsLabel = false
-                    def cellCount = row.getLastCellNum()
+                    def cellCount
                     def emptyCount = 0
+                    
+                    try {
+                        row = sheet.getRow(i)
+                        cellCount = row.getLastCellNum()
+                    }
+                    catch (Exception e) {
+                        println "Row is non existent..."
+                        continue
+                    }
 
                     //Check each cell to determine if the row is empty (mostly)
                     for (def j = 0; j < row.getLastCellNum(); j++) {
                         Cell cell = row.getCell(j)
                         def cellString = cell.toString()
 
-                        switch (cell.getCellType()) {
-                            case Cell.CELL_TYPE_STRING:
-                                switch (getLabelType(cellString)) {
-                                    case ExcelLabel.PRODUCT_NUMBER:
-                                    case ExcelLabel.PRODUCT_DESCRIPTION:
-                                    case ExcelLabel.PRODUCT_PRICE:
-                                        rowIsLabel = true
-                                        break
-                                }
-                                break
-                            case Cell.CELL_TYPE_BLANK:
-                                emptyCount++
-                                break
-                            default:
-                                break
+                        try {
+                            switch (cell.getCellType()) {
+                                case Cell.CELL_TYPE_STRING:
+                                    switch (getLabelType(cellString)) {
+                                        case ExcelLabel.PRODUCT_NUMBER:
+                                        case ExcelLabel.PRODUCT_DESCRIPTION:
+                                        case ExcelLabel.PRODUCT_PRICE:
+                                            rowIsLabel = true
+                                            break
+                                    }
+                                    break
+                                case Cell.CELL_TYPE_BLANK:
+                                    emptyCount++
+                                    break
+                                default:
+                                    break
+                            }
+                        }
+                        catch (Exception e) {
+                            emptyCount++
                         }
                     }
 
@@ -248,11 +290,10 @@ class ExcelService {
                     job.incrementStep()
                 }
                 job.incrementStep()
+                job.setDone("Success")
             }
-            
-            job.setDone("Success")
         })
         
-        return job.id
+        return jobIds
     }
 }

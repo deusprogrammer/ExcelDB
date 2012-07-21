@@ -11,7 +11,8 @@ class ZipController {
     def success() {
         UFile file = UFile.findById(params.ufileId)
         def jobList = []
-        def jobId = -1
+        def jobIds = []
+        def jobs = []
         
         if (file) {
             def path = "C:/tmp/unzipped/${(new Date()).getTime()}"
@@ -26,10 +27,15 @@ class ZipController {
                 jobList << ent
             }
             
-            jobId = ExcelService.processExcelFiles(jobList, file.name)
+            jobIds = ExcelService.processExcelFiles(jobList, file.name)
+            
+            jobIds.eachWithIndex { jobId, index ->
+                def fileName = jobList[index]
+                jobs += [file: jobList[index], id: jobId]
+            }
         }
                 
-        [params:params, jobs: [[file: file.name, id: jobId]], files: jobList]
+        [params:params, jobs: jobs]
     }
     
     def error() {

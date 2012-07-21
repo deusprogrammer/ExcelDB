@@ -22,16 +22,6 @@
                                                 <td><b>ID</b></td>
 						<td>${job.id}</td>
 					</tr>
-                                        </tr><tr>
-                                                <td><b>Files</b></td>
-						<td>
-                                                  <ul>
-                                                  <g:each var="file" in="${files}">
-                                                    <li>${file}</li>
-                                                  </g:each>
-                                                  </ul>
-                                                </td>
-					</tr>
 				</table>
 			</g:each>
 		</p>
