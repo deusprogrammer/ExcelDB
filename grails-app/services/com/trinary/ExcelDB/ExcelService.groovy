@@ -116,7 +116,7 @@ class ExcelService {
             ExcelJob job = ExcelJob.get(jobIds[k])
                 
             if (!job)
-            continue
+                continue
         
             backgroundService.execute ("Job ${job.id}", {
                 Product p
