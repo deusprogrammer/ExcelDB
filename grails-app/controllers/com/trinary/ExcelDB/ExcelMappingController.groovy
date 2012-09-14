@@ -112,20 +112,25 @@ class ExcelMappingController {
                 def cells = []
                 for (def j = 0; j < row.getLastCellNum(); j++) {
                     cells += row.getCell(j).toString()
-                    println "CELLS: ${cells}"
+                    //println "CELLS: ${cells}"
                     thisWidth++
                 }
                 table[rowNumber++] = cells
-                println "TABLE: ${table}"
+                //println "TABLE: ${table}"
             }
             
             if (thisWidth > width) {
                 width = thisWidth
             }
-            
-            println "WIDTH: ${width}"
         }
+
+        println "WIDTH: ${width}"
+        println "TABLE: ${table}"
         
         [table: table, width: width]
+    }
+    
+    def map() {
+        render params["colhead"]
     }
 }
