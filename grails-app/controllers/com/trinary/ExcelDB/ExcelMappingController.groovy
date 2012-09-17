@@ -8,10 +8,16 @@ import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
 
 class ExcelMappingController {
+    def ExcelService
 
-    def index() {
+    def show() {
+        def sheetNumber = 0
+        
         if (!params["file"]) {
             return []
+        }
+        if (params["sheet"]) {
+            sheetNumber = Integer.parseInt(params["sheet"])
         }
         
         def fileLocation = params["file"]
@@ -19,7 +25,9 @@ class ExcelMappingController {
                 
         //println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
         Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
-        Sheet sheet = workbook.getSheetAt(0)
+        Sheet sheet = workbook.getSheetAt(sheetNumber)
+        
+        def nSheets = workbook.getNumberOfSheets()
 
         def columnLabels = [productNumber: "", productDescription: "", productPrice: ""]
         def labelFound = false
@@ -127,10 +135,34 @@ class ExcelMappingController {
         println "WIDTH: ${width}"
         println "TABLE: ${table}"
         
-        [table: table, width: width]
+        [table: table, width: width, file: fileLocation, sheet: sheetNumber, nSheets: nSheets]
     }
     
     def map() {
-        render params["colhead"]
+        def columnMappings = [:]
+        def fileLocation = params["fileLocation"]
+        def sheet = params["sheet"]
+        
+        params["colhead"].eachWithIndex { columnLabel, i ->
+            switch (columnLabel) {
+            case "None":
+                break
+            case "Product Price":
+                columnMappings["productPrice"] = i
+                break
+            case "Product Description":
+                columnMappings["productDescription"] = i
+                break
+            case "Product Number":
+                columnMappings["productNumber"] = i
+                break
+            }
+        }
+        
+        columnMappings["sheet"] = sheet
+        
+        ExcelService.processExcelFiles([fileLocation], columnMappings)
+        
+        redirect(controller: "failedJob", action: "pop")
     }
 }

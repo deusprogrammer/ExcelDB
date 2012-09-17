@@ -6,7 +6,6 @@ class ExcelJob {
     Boolean done
     Integer step
     Integer nSteps
-    String failures
     
     ExcelJob() {
         println "Creating new job..."
@@ -37,6 +36,5 @@ class ExcelJob {
         status()
         step()
         nSteps()
-        failures nullable: true
     }
 }

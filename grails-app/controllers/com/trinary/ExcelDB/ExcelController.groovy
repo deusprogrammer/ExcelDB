@@ -13,7 +13,7 @@ class ExcelController {
                 
         if (file) {
             def job = [:]
-            job["id"] = ExcelService.processExcelFiles([file.path], file.name)
+            job["id"] = ExcelService.processExcelFiles([file.path])
             job["file"] = file.path
             jobs += job
         }

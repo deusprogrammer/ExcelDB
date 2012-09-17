@@ -9,17 +9,25 @@
   <head>
     <meta name="layout" content="main">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Manual Excel Mapping</title>
+    <title>Manual Excel Mapping for ${file}</title>
   </head>
   <body>
-    <h1>Manual Excel Mappings</h1>
+    <g:if test="${sheet > 0}">
+      <g:link action="show" params="${[file: file, sheet: sheet-1]}">[Prev Sheet]</g:link>
+    </g:if>
+    <g:if test="${sheet < nSheets - 1}">
+      <g:link action="show" params="${[file: file, sheet: sheet+1]}">[Next Sheet]</g:link>
+    </g:if>
+    <h1>Manual Excel Mapping for ${file}</h1>
     <g:form name="mapping" url="[action:'map', controller: 'excelMapping']">
+      <g:hiddenField name="fileLocation" value="${file}" />
+      <g:hiddenField name="sheet" value="${sheet}" />
       <table>
         <tbody>
           <tr>
             <%def j=0%>
             <g:while test="${j < width}">
-              <th><g:select from="${["None", "Price", "Product Number", "Product Description"]}" name="colhead" /></th>
+              <th><g:select from="${["None", "Product Price", "Product Number", "Product Description"]}" name="colhead" /></th>
               <%j++%>
             </g:while>
           </tr>
