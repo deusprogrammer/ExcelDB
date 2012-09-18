@@ -17,7 +17,7 @@ class FailedJobController {
         
         if (failed) {
             if (failed.size() == 0) {
-                redirect(controller: excelJob, action: list)
+                redirect(controller: "excelJob", action: "list")
             }
             else {
                 def fileLocation = failed[0].fileLocation
@@ -25,6 +25,9 @@ class FailedJobController {
 
                 redirect(controller: "excelMapping", action: "show", params: [file: fileLocation])
             }
+        }
+        else {
+            redirect(controller: "excelJob", action: "list")
         }
     }
 }
