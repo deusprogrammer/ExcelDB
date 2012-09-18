@@ -161,7 +161,7 @@ class ExcelMappingController {
         
         columnMappings["sheet"] = sheet
         
-        ExcelService.processExcelFiles([fileLocation], columnMappings)
+        ExcelService.processExcelFiles(fileLocation, columnMappings)
         
         redirect(controller: "failedJob", action: "pop")
     }

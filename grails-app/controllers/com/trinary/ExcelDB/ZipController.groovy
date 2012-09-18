@@ -27,7 +27,9 @@ class ZipController {
                 jobList << ent
             }
             
-            jobIds = ExcelService.processExcelFiles(jobList)
+            jobList.each { job ->
+                jobIds += ExcelService.processExcelFiles(job)             
+            }
             
             jobIds.eachWithIndex { jobId, index ->
                 def fileName = jobList[index]

@@ -86,17 +86,9 @@ class ExcelService {
         return precedes(string, old, productPriceLabels)
     }
 
-    def processExcelFiles(def fileLocations, def columnMappings = null) throws Exception, FileNotFoundException, IOException {
-        def rowSum = 0
-        fileLocations.each { fileLocation ->
-            //println "FILE LOCATION: ${fileLocation}"
-            Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
-            Sheet sheet = workbook.getSheetAt(0)
-            rowSum += sheet.getLastRowNum()
-        }
-        
-        def jobIds = []
-        fileLocations.eachWithIndex { fileLocation, index ->
+    def processExcelFiles(def fileLocation, def columnMappings = null) throws Exception, FileNotFoundException, IOException {
+        def jobId
+        //fileLocations.eachWithIndex { fileLocation, index ->
             Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
             Sheet sheet = workbook.getSheetAt(0)
             def steps = sheet.getLastRowNum()
@@ -106,25 +98,19 @@ class ExcelService {
             job.nSteps = steps
             job.save(flush: true)
             
-            jobIds += job.id
-        }
+            jobId = job.id
+        //}
         
         def failedFiles = []
 
-        for (int k = 0; k < fileLocations.size(); k++) { 
-            def fileLocation = fileLocations[k]
+        //for (int k = 0; k < fileLocations.size(); k++) { 
+            //def fileLocation = fileLocations[k]
             def sheetNumber = 0
-            ExcelJob job = ExcelJob.get(jobIds[k])
-                
-            if (!job)
-                continue
         
             backgroundService.execute ("Job ${job.id}", {
                 Product p
                 
                 println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
-                Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
-                Sheet sheet = workbook.getSheetAt(0)
 
                 def columnVotes = [productNumber: -1, productDescription: -1, productPrice: -1]
                 def columnLabels = [productNumber: "", productDescription: "", productPrice: ""]
@@ -303,8 +289,8 @@ class ExcelService {
                 job.incrementStep()
                 job.setDone("Success")
             })
-        }
+        //}
         
-        return jobIds
+        return jobId
     }
 }
