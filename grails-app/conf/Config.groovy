@@ -63,10 +63,20 @@ grails.hibernate.cache.queries = true
 environments {
     development {
         grails.logging.jul.usebridge = true
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            excel.root = "C:/tmp/saved/"
+        } else {
+            excel.root = "/tmp/excelDb/saved/"
+        }
     }
     production {
         grails.logging.jul.usebridge = false
-        // TODO: grails.serverURL = "http://www.changeme.com"
+        grails.serverURL = "http://deusprogrammer.no-ip.org/exceldb"
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            excel.root = "C:/tmp/saved/"
+        } else {
+            excel.root = "/tmp/excelDb/saved/"
+        }
     }
 }
 
@@ -96,11 +106,19 @@ fileuploader {
 	zip {
 		maxSize = 1024 * 1024 * 100 //100MB
 		allowedExtensions = ["zip"]
-		path = "c:/tmp/zips"
+                if (System.properties['os.name'].toLowerCase().contains('windows')) {
+                    path = "c:/tmp/zips"
+                } else {
+                    path = "/tmp/excelDb/zips"
+                }
 	}
 	excel {
 		maxSize = 1024 * 1024 * 4 //4 mbytes
 		allowedExtensions = ["xls", "xlsx"]
-		path = "c:/tmp/excel"
+		if (System.properties['os.name'].toLowerCase().contains('windows')) {
+                    path = "c:/tmp/excel"
+                } else {
+                    path = "/tmp/excelDb/excel"
+                }
 	}
 }

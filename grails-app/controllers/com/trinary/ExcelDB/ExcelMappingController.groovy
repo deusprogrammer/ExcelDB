@@ -98,7 +98,7 @@ class ExcelMappingController {
                 Cell cell = row.getCell(j)
                 def cellString = cell.toString()
 
-                /*
+                
                 try {
                     switch (cell.getCellType()) {
                     case Cell.CELL_TYPE_STRING:
@@ -113,21 +113,20 @@ class ExcelMappingController {
                 catch (Exception e) {
                     emptyCount++
                 }
-                */
             }
 
             def thisWidth = 0
             //If the row is data, print it.
-            //if ((cellCount - emptyCount) >= 3) {
+            if ((cellCount - emptyCount) >= 3) {
                 def cells = []
                 for (def j = 0; j < row.getLastCellNum(); j++) {
                     cells += row.getCell(j).toString()
                     //println "CELLS: ${cells}"
                     thisWidth++
                 }
-                table[rowNumber++] = cells
+                table[rowNumber++] = [cells: cells, rowNumber: i]
                 //println "TABLE: ${table}"
-            //}
+            }
             
             if (thisWidth > width) {
                 width = thisWidth

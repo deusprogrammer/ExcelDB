@@ -103,9 +103,13 @@ class ProductController {
     }
     
     def writeOut() {
-        ExcelService.writeDBToFile()
-        flash.message = "Now writing database to Excel File"
+        def filePath = ExcelService.writeDBToFile()
         
-        redirect(action: "list")
+        def file = new File(filePath) 
+        response.setHeader("Content-Type", "application/excel") 
+        response.setHeader("Content-Disposition", "attachment; filename=${file.getName()}") 
+        response.setHeader("Content-Length", "${file.size()}") 
+
+        response.outputStream << file.newInputStream()
     }
 }

@@ -33,10 +33,10 @@
                   <%j++%>
                 </g:while>
               </tr>
-              <g:each in="${table}" status="i" var="cells">
+              <g:each in="${table}" status="i" var="row">
                 <tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
-                  <td><g:radio name="radioGroup" value="${i}"/></td>
-                  <g:each in="${cells}" var="cell">
+                  <td><g:radio name="radioGroup" value="${row.rowNumber}"/></td>
+                  <g:each in="${row.cells}" var="cell">
                     <td>${cell}</td>
                   </g:each>
                 </tr>

@@ -10,6 +10,10 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook
 import org.apache.poi.hssf.usermodel.HSSFSheet
 import org.apache.poi.hssf.usermodel.HSSFCell
 
+import java.text.SimpleDateFormat
+
+import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
+
 class ExcelService {
     def backgroundService
     
@@ -374,11 +378,16 @@ class ExcelService {
         sheet.autoSizeColumn(1)
         sheet.autoSizeColumn(2)
         
-        def time = new Date().getTime()
+        def date = Calendar.getInstance()
+        def sdf = new SimpleDateFormat("yyyyMMddHHmmss")
+        def time = sdf.format(date.getTime())
         
-        def fileOut = new FileOutputStream("C:/tmp/saved/" + time + ".xls")
+        def filePath = CH.config.excel.root + time + ".xls"
+        def fileOut = new FileOutputStream(filePath)
         workbook.write(fileOut)
         fileOut.close()
+        
+        return filePath
     }
     
     
