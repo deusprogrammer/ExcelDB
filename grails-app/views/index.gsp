@@ -1,4 +1,6 @@
-<!doctype html>
+<%@ page import="com.trinary.ExcelDB.ExcelJob" %>
+<%@ page import="com.trinary.ExcelDB.FailedJob" %>
+<%@ page import="com.trinary.ExcelDB.Product" %>
 <html>
 	<head>
 		<meta name="layout" content="main"/>
@@ -129,17 +131,30 @@
                             errorController="excel"/>
                         </div>
                         
-                        <h3>View Product Database</h3>
-                        <div class="sub-item">
-                          <g:link controller="product" action="list">Product List</g:link>
-                        </div>
+                        <g:if test="${Product.count() > 0}">
+                          <h3>Product Database</h3>
+                          <div class="sub-item">
+                            <g:link controller="product" action="list">Product List</g:link><br/>
+                            <g:link controller="product" action="writeOut">Request Excel Spreadsheet</g:link><br/>
+                          </div>
+                        </g:if>
               
-                        <h3>View Pending Jobs</h3>
-                        <div class="sub-item">
-                          <g:link controller="excelJob" action="list">Jobs List</g:link>
-                        </div>
+                        <g:if test="${ExcelJob.count() > 0}">
+                          <h3>View Pending Jobs</h3>
+                          <div class="sub-item">
+                            <g:link controller="excelJob" action="list">Jobs List</g:link>
+                          </div>
+                        </g:if>
                         
-                         <h3>Settings</h3>
+                        <g:if test="${FailedJob.count() > 0}">
+                          <h3>Process Failed Jobs</h3>
+                          <div class="sub-item">
+                            <g:link controller="failedJob" action="pop">Map Failed Excel Jobs</g:link><br/>
+                            <g:link controller="failedJob" action="list">List Failed Excel Jobs</g:link>
+                          </div>
+                        </g:if>
+                        
+                        <h3>Settings</h3>
                         <div class="sub-item">
                           <g:link controller="keywords" action="list">Keywords</g:link><br/>
                           <g:link controller="rules" action="list">Rules</g:link>

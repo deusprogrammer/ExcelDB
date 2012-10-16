@@ -37,7 +37,8 @@ class ZipController {
             }
         }
                 
-        [params:params, jobs: jobs]
+        //[params:params, jobs: jobs]
+        redirect(controller: "excelJob", action: "list")
     }
     
     def error() {

@@ -6,9 +6,55 @@ import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.hssf.usermodel.HSSFWorkbook
+import org.apache.poi.hssf.usermodel.HSSFSheet
+import org.apache.poi.hssf.usermodel.HSSFCell
 
 class ExcelService {
     def backgroundService
+    
+    //DB Helper functions
+    
+    def setDone(def jobId, def message) {
+        def job = ExcelJob.get(jobId)
+        
+        if (job) {
+            synchronized(job) {
+                job.lock()
+                job.done = true
+                job.status = message
+                job.step = job.nSteps
+
+                job.save(flush: true)
+            }
+        }        
+    }
+    
+    def incrementStep(def jobId) {
+        def job = ExcelJob.get(jobId)
+        
+        if (job) {
+            synchronized(job) {
+                job.lock()
+                job.step++
+
+                job.save(flush: true)
+            }
+        }        
+    }
+    
+    def setSteps(def jobId, def nSteps) {
+        def job = ExcelJob.get(jobId)
+        
+        if (job) {
+            synchronized(job) {
+                job.lock()
+                job.nSteps = nSteps
+                job.step = 0
+                job.save(flush: true)
+            }
+        }        
+    }
     
     def position(def s, def l) {
         for(def i = 0; i < l.size(); i++) {
@@ -19,6 +65,8 @@ class ExcelService {
 
         return -1
     }
+    
+    //Parsing Functions
 
     def precedes (def s1, def s2, def l) {
         def s1Pos = position(s1, l)
@@ -43,8 +91,6 @@ class ExcelService {
             old = [productNumber: "", productDescription: "", productPrice: ""]
         }
         
-        //println "OLD IS ${old}"
-        
         if (isProductNumber(string, old["productNumber"])) {
             return ExcelLabel.PRODUCT_NUMBER
         }
@@ -60,65 +106,58 @@ class ExcelService {
     }
     
     def isProductNumber(def string, def old) {
-        //def productNumberLabels = ["part", "part number", "product number", "product id", " product name"]
         def productNumberLabels = Keywords.getKeywords("productNumber")
         
-        //if (productNumberLabels.contains(string.toLowerCase())) {
         return precedes(string, old, productNumberLabels)
     }
     
     def isProductDescription(def string, def old) {
-        //def productDescriptionLabels = ["description", "desc", "product description", "product information"]
         def productDescriptionLabels = Keywords.getKeywords("productDescription")
         
-        //if (productDescriptionLabels.contains(string.toLowerCase())) {
         return precedes(string, old, productDescriptionLabels)
     }
     
     def isProductPrice(def string, def old) {
-        //def productPriceLabels = ["price", "authorized", "authorized price", "msrp", "retail price"]
         def productPriceLabels = Keywords.getKeywords("productPrice")
-        
-        //println "\tOLD IS ${old}"
-        //println "\tSTR IS ${string}"
-        
-        //if (productPriceLabels.contains(string.toLowerCase())) {
+
         return precedes(string, old, productPriceLabels)
     }
+    
+    //Excel Functions
 
     def processExcelFiles(def fileLocation, def columnMappings = null) throws Exception, FileNotFoundException, IOException {
         def jobId
-        //fileLocations.eachWithIndex { fileLocation, index ->
-            Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
-            Sheet sheet = workbook.getSheetAt(0)
-            def steps = sheet.getLastRowNum()
-            
-            ExcelJob job = new ExcelJob()
-            job.fileName = fileLocation
-            job.nSteps = steps
-            job.save(flush: true)
-            
-            jobId = job.id
-        //}
-        
+        def manu = getManufacturer(fileLocation)
         def failedFiles = []
-
-        //for (int k = 0; k < fileLocations.size(); k++) { 
-            //def fileLocation = fileLocations[k]
-            def sheetNumber = 0
+        Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
+        Sheet sheet
+        ExcelJob job = new ExcelJob()
+                
+        job.fileName = fileLocation
+        job.save(flush: true)
         
-            backgroundService.execute ("Job ${job.id}", {
-                Product p
-                
-                println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
+        jobId = job.id
 
-                def columnVotes = [productNumber: -1, productDescription: -1, productPrice: -1]
-                def columnLabels = [productNumber: "", productDescription: "", productPrice: ""]
-                def labelFound = false
-                def dataStartIndex = -1
-                
-                if (!columnMappings) {
-                    //Row
+        def sheetNumber = 0
+        
+        println "MANUFACTURER: ${manu}"
+
+        backgroundService.execute ("Job ${job.id}", {
+            Product p
+
+            println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
+
+            def columnVotes = [productNumber: -1, productDescription: -1, productPrice: -1]
+            def columnLabels = [productNumber: "", productDescription: "", productPrice: ""]
+            def labelFound = false
+            def sheetFound = false
+            def dataStartIndex = -1
+
+            if (!columnMappings) {
+                //Row
+                for (def n = 0; n < workbook.getNumberOfSheets() && !sheetFound; n++) {
+                    sheet = workbook.getSheetAt(n)
+                    println "*******SHEET ${n}*******"
                     for (def i = 0; i < sheet.getLastRowNum(); i++) {
                         Row row
                         def rowIsLabel = false
@@ -188,6 +227,8 @@ class ExcelService {
                             //Jump out of loop.  Column types are known
                             if (labelFound) {
                                 println "Columns are identified"
+                                sheetNumber = n
+                                sheetFound = true
                                 if (dataStartIndex == -1) {
                                     dataStartIndex = i
                                     //println "Data starts at line ${dataStartIndex}"
@@ -204,93 +245,152 @@ class ExcelService {
                         }
                     }
                 }
-                else {
-                    columnVotes["productNumber"] = columnMappings["productNumber"]
-                    columnVotes["productDescription"] = columnMappings["productDescription"]
-                    columnVotes["productPrice"] = columnMappings["productPrice"]
-                    sheetNumber = Integer.parseInt(columnMappings["sheet"])
-                }
-                
-                println "COLUMNS ARE"
-                println "\tProduct Number:      "  + columnVotes["productNumber"]
-                println "\tProduct Description: "  + columnVotes["productDescription"]
-                println "\tProduct Price:       "  + columnVotes["productPrice"]
+            }
+            else {
+                columnVotes["productNumber"] = columnMappings["productNumber"]
+                columnVotes["productDescription"] = columnMappings["productDescription"]
+                columnVotes["productPrice"] = columnMappings["productPrice"]
+                sheetNumber = Integer.parseInt(columnMappings["sheet"])
+                dataStartIndex = Integer.parseInt(columnMappings["row"])
+            }
 
-                if (columnVotes["productNumber"] == -1 || columnVotes["productDescription"] == -1 || columnVotes["productPrice"] == -1) {
-                    println "Unable to identify all columns!"
-                    job.setDone("Failed")
-                    
-                    def failure = new FailedJob(fileLocation: fileLocation)
-                    failure.save(flush: true)
-                    
-                    return
-                }
-                
-                sheet = workbook.getSheetAt(sheetNumber)
+            println "COLUMNS ARE"
+            println "\tProduct Number:      "  + columnVotes["productNumber"]
+            println "\tProduct Description: "  + columnVotes["productDescription"]
+            println "\tProduct Price:       "  + columnVotes["productPrice"]
 
-                //Add excel file to database
-                for (def i = dataStartIndex; i < sheet.getLastRowNum(); i++) {
-                    Row row
-                    def rowIsLabel = false
-                    def cellCount
-                    def emptyCount = 0
-                    
+            if (columnVotes["productNumber"] == -1 || columnVotes["productDescription"] == -1 || columnVotes["productPrice"] == -1) {
+                println "Unable to identify all columns!"
+                setDone(jobId, "Failed")
+
+                def failure = new FailedJob(fileLocation: fileLocation)
+                failure.save(flush: true)
+
+                return
+            }
+
+            sheet = workbook.getSheetAt(sheetNumber)
+            setSteps(jobId, sheet.getLastRowNum())
+            
+            println "SHEET:      ${sheetNumber}"
+            println "DATA START: ${dataStartIndex}"
+
+            //Add excel file to database
+            for (def i = dataStartIndex; i < sheet.getLastRowNum(); i++) {
+                Row row
+                def rowIsLabel = false
+                def cellCount
+                def emptyCount = 0
+
+                try {
+                    row = sheet.getRow(i)
+                    cellCount = row.getLastCellNum()
+                }
+                catch (Exception e) {
+                    println "Row is non existent..."
+                    continue
+                }
+
+                //Check each cell to determine if the row is empty (mostly)
+                for (def j = 0; j < row.getLastCellNum(); j++) {
+                    Cell cell = row.getCell(j)
+                    def cellString = cell.toString()
+
                     try {
-                        row = sheet.getRow(i)
-                        cellCount = row.getLastCellNum()
+                        switch (cell.getCellType()) {
+                            case Cell.CELL_TYPE_STRING:
+                                switch (getLabelType(cellString)) {
+                                    case ExcelLabel.PRODUCT_NUMBER:
+                                    case ExcelLabel.PRODUCT_DESCRIPTION:
+                                    case ExcelLabel.PRODUCT_PRICE:
+                                        rowIsLabel = true
+                                        break
+                                }
+                                break
+                            case Cell.CELL_TYPE_BLANK:
+                                emptyCount++
+                                break
+                            default:
+                                break
+                        }
                     }
                     catch (Exception e) {
-                        println "Row is non existent..."
-                        continue
+                        emptyCount++
                     }
-
-                    //Check each cell to determine if the row is empty (mostly)
-                    for (def j = 0; j < row.getLastCellNum(); j++) {
-                        Cell cell = row.getCell(j)
-                        def cellString = cell.toString()
-
-                        try {
-                            switch (cell.getCellType()) {
-                                case Cell.CELL_TYPE_STRING:
-                                    switch (getLabelType(cellString)) {
-                                        case ExcelLabel.PRODUCT_NUMBER:
-                                        case ExcelLabel.PRODUCT_DESCRIPTION:
-                                        case ExcelLabel.PRODUCT_PRICE:
-                                            rowIsLabel = true
-                                            break
-                                    }
-                                    break
-                                case Cell.CELL_TYPE_BLANK:
-                                    emptyCount++
-                                    break
-                                default:
-                                    break
-                            }
-                        }
-                        catch (Exception e) {
-                            emptyCount++
-                        }
-                    }
-
-                    if ((cellCount - emptyCount) >= 3 && !rowIsLabel) {
-                        String productNumber = row.getCell(columnVotes["productNumber"]).toString()
-                        println "ADDING PRODUCT NUMBER ${productNumber}"
-
-                        p = new Product()
-                        p.productNumber = productNumber
-                        p.productPrice = row.getCell(columnVotes["productPrice"]).toString()
-                        p.productDescription = row.getCell(columnVotes["productDescription"]).toString()
-                        p.productVendor = "Default"
-                        p.save(flush: true)
-                    }
-
-                    job.incrementStep()
                 }
-                job.incrementStep()
-                job.setDone("Success")
-            })
-        //}
+
+                if ((cellCount - emptyCount) >= 3 && !rowIsLabel) {
+                    String productNumber = row.getCell(columnVotes["productNumber"]).toString()
+                    println "ROW: ${i}"
+                    println "ADDING PRODUCT NUMBER ${productNumber}"
+                    
+                    p = Product.findByProductNumberAndProductVendor(productNumber, manu)
+                    
+                    if (!p) {
+                        println "Unable to find existing product.  Adding new one."
+                        p = new Product()
+                    }
+                    
+                    p.productNumber = productNumber
+                    p.productPrice = row.getCell(columnVotes["productPrice"]).toString()
+                    p.productDescription = row.getCell(columnVotes["productDescription"]).toString()
+                    p.productVendor = manu
+                    p.save(flush: true)
+                }
+
+                incrementStep(jobId)
+            }
+            incrementStep(jobId)
+            setDone(jobId, "Success")
+        })
         
         return jobId
+    }
+    
+    def writeDBToFile() {
+        def products = Product.list()
+        
+        def workbook = new HSSFWorkbook()
+        def sheet = workbook.createSheet()
+        
+        //Write header
+        def row = sheet.createRow(0)
+        row.createCell(0).setCellValue("Product Number")
+        row.createCell(1).setCellValue("Product Description")
+        row.createCell(2).setCellValue("Product Price")
+        
+        products.eachWithIndex { product, i ->
+            row = sheet.createRow(i + 1)
+            def productNumber = product.productVendor + "-" + product.productNumber
+            println "PRODUCT NUMBER:      ${productNumber}"
+            println "PRODUCT DESCRIPTION: ${productNumber}"
+            println "PRODUCT PRICE:       ${productNumber}"
+            row.createCell(0).setCellValue(productNumber)
+            row.createCell(1).setCellValue(product.productDescription)
+            row.createCell(2).setCellValue(product.productPrice)
+        }
+        
+        sheet.autoSizeColumn(0)
+        sheet.autoSizeColumn(1)
+        sheet.autoSizeColumn(2)
+        
+        def time = new Date().getTime()
+        
+        def fileOut = new FileOutputStream("C:/tmp/saved/" + time + ".xls")
+        workbook.write(fileOut)
+        fileOut.close()
+    }
+    
+    
+    def getManufacturer(def filePath) {
+        def pattern = /([A-Z]{3})-.*/
+        def fileName = filePath.split("/")[-1]
+        def match = fileName =~ pattern
+        if (match) {
+            return match[0][1]
+        }
+        return {
+            return "UNK"
+        }
     }
 }

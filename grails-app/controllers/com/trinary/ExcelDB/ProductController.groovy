@@ -5,6 +5,7 @@ import org.springframework.dao.DataIntegrityViolationException
 class ProductController {
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
+    def ExcelService
 
     def index() {
         redirect(action: "list", params: params)
@@ -99,5 +100,12 @@ class ProductController {
 			flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'product.label', default: 'Product'), params.id])
             redirect(action: "show", id: params.id)
         }
+    }
+    
+    def writeOut() {
+        ExcelService.writeDBToFile()
+        flash.message = "Now writing database to Excel File"
+        
+        redirect(action: "list")
     }
 }

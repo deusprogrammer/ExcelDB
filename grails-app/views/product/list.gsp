@@ -18,38 +18,39 @@
 		<div id="list-product" class="content scaffold-list" role="main">
 			<h1><g:message code="default.list.label" args="[entityName]" /></h1>
 			<g:if test="${flash.message}">
-			<div class="message" role="status">${flash.message}</div>
+                          <div class="message" role="status">${flash.message}</div>
 			</g:if>
-			<table>
-				<thead>
-					<tr>
-					
-						<g:sortableColumn property="productDescription" title="${message(code: 'product.productDescription.label', default: 'Product Description')}" />
-					
-						<g:sortableColumn property="productNumber" title="${message(code: 'product.productNumber.label', default: 'Product Number')}" />
-					
-						<g:sortableColumn property="productPrice" title="${message(code: 'product.productPrice.label', default: 'Product Price')}" />
-					
-						<g:sortableColumn property="productVendor" title="${message(code: 'product.productVendor.label', default: 'Product Vendor')}" />
-					
-					</tr>
-				</thead>
-				<tbody>
-				<g:each in="${productInstanceList}" status="i" var="productInstance">
-					<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
-					
-						<td><g:link action="show" id="${productInstance.id}">${fieldValue(bean: productInstance, field: "productDescription")}</g:link></td>
-					
-						<td>${fieldValue(bean: productInstance, field: "productNumber")}</td>
-					
-						<td>${fieldValue(bean: productInstance, field: "productPrice")}</td>
-					
-						<td>${fieldValue(bean: productInstance, field: "productVendor")}</td>
-					
-					</tr>
-				</g:each>
-				</tbody>
-			</table>
+                        <div style="overflow: scroll; max-width: 960px; max-height: 400px; margin: auto;">
+                          <table>
+                            <thead>
+                              <tr>
+                                <g:sortableColumn property="productNumber" title="${message(code: 'product.productNumber.label', default: 'Product Number')}" />
+
+                                <g:sortableColumn property="productDescription" title="${message(code: 'product.productDescription.label', default: 'Product Description')}" />
+
+                                <g:sortableColumn property="productPrice" title="${message(code: 'product.productPrice.label', default: 'Product Price')}" />
+
+                                <g:sortableColumn property="productVendor" title="${message(code: 'product.productVendor.label', default: 'Product Vendor')}" />
+
+                              </tr>
+                            </thead>
+                                  <tbody>
+                                  <g:each in="${productInstanceList}" status="i" var="productInstance">
+                                          <tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
+
+                                            <td><g:link action="show" id="${productInstance.id}">${fieldValue(bean: productInstance, field: "productNumber")}</g:link></td>
+
+                                                  <td>${fieldValue(bean: productInstance, field: "productDescription")}</td>
+
+                                                  <td>${fieldValue(bean: productInstance, field: "productPrice")}</td>
+
+                                                  <td>${fieldValue(bean: productInstance, field: "productVendor")}</td>
+
+                                          </tr>
+                                  </g:each>
+                                  </tbody>
+                          </table>
+                        </div>
 			<div class="pagination">
 				<g:paginate total="${productInstanceTotal}" />
 			</div>

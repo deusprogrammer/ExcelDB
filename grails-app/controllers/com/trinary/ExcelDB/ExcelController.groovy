@@ -18,7 +18,8 @@ class ExcelController {
             jobs += job
         }
         
-        [jobs: jobs]
+        //[jobs: jobs]
+        redirect(controller: "excelJob", action: "list")
     }
     
     def error() {

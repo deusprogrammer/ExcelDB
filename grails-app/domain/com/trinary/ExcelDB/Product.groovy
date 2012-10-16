@@ -30,4 +30,8 @@ class Product {
     static constraints = {
         productNumber unique: true
     }
+    
+    static mapping = {
+        productDescription type: 'text'
+    }
 }

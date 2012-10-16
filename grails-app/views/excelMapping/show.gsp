@@ -27,6 +27,7 @@
             <tbody>
               <tr>
                 <%def j=0%>
+                <th>Starting Row</th>
                 <g:while test="${j < width}">
                   <th><g:select from="${["None", "Product Price", "Product Number", "Product Description"]}" name="colhead" /></th>
                   <%j++%>
@@ -34,6 +35,7 @@
               </tr>
               <g:each in="${table}" status="i" var="cells">
                 <tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
+                  <td><g:radio name="radioGroup" value="${i}"/></td>
                   <g:each in="${cells}" var="cell">
                     <td>${cell}</td>
                   </g:each>
@@ -42,7 +44,7 @@
             </tbody>
           </table>
         </div>
-        <div style="text-align: right; position: relative; right: 10px"><g:submitButton name="submit" value="Submit" /></div>
+        <div style="text-align: right; position: relative; right: 10px"><g:submitButton name="submit" value="Submit" />|<g:link action="pop">[Skip]</g:link></div>
     </g:form>
   </body>
 </html>

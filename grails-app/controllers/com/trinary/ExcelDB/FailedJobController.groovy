@@ -4,6 +4,11 @@ class FailedJobController {
 
     def index() { }
     
+    def list() {
+        params.max = Math.min(params.max ? params.int('max') : 10, 100)
+        [failedJobInstanceList: FailedJob.list(params), failedJobInstanceTotal: FailedJob.count()]
+    }
+    
     def populate() {
         new FailedJob(fileLocation: "C:\\ftest\\test1.xlsx").save(flush: true)
         new FailedJob(fileLocation: "C:\\ftest\\test2.xls").save(flush: true)

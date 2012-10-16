@@ -78,7 +78,7 @@ class ExcelMappingController {
         def rowNumber = 0
         def width = 0
         //Add excel file to database
-        for (def i = dataStartIndex; i < dataStartIndex + 10; i++) {
+        for (def i = 0; i < sheet.getLastRowNum(); i++) {
             Row row
             def rowIsLabel = false
             def cellCount
@@ -98,6 +98,7 @@ class ExcelMappingController {
                 Cell cell = row.getCell(j)
                 def cellString = cell.toString()
 
+                /*
                 try {
                     switch (cell.getCellType()) {
                     case Cell.CELL_TYPE_STRING:
@@ -112,11 +113,12 @@ class ExcelMappingController {
                 catch (Exception e) {
                     emptyCount++
                 }
+                */
             }
 
             def thisWidth = 0
             //If the row is data, print it.
-            if ((cellCount - emptyCount) >= 3) {
+            //if ((cellCount - emptyCount) >= 3) {
                 def cells = []
                 for (def j = 0; j < row.getLastCellNum(); j++) {
                     cells += row.getCell(j).toString()
@@ -125,7 +127,7 @@ class ExcelMappingController {
                 }
                 table[rowNumber++] = cells
                 //println "TABLE: ${table}"
-            }
+            //}
             
             if (thisWidth > width) {
                 width = thisWidth
@@ -142,6 +144,7 @@ class ExcelMappingController {
         def columnMappings = [:]
         def fileLocation = params["fileLocation"]
         def sheet = params["sheet"]
+        def row = params["radioGroup"]
         
         params["colhead"].eachWithIndex { columnLabel, i ->
             switch (columnLabel) {
@@ -160,6 +163,7 @@ class ExcelMappingController {
         }
         
         columnMappings["sheet"] = sheet
+        columnMappings["row"] = row
         
         ExcelService.processExcelFiles(fileLocation, columnMappings)
         
