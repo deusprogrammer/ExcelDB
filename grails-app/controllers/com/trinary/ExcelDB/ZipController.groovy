@@ -30,6 +30,7 @@ class ZipController {
             }
             
             jobList.each { job ->
+                job = job.replaceAll("\\\\", "/")
                 println "JOB: ${job}"
                 jobIds += ExcelService.processExcelFiles(job)             
             }
