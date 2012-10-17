@@ -12,6 +12,7 @@ class ExcelMappingController {
 
     def show() {
         def sheetNumber = 0
+        def sheetName = ""
         
         if (!params["file"]) {
             return []
@@ -26,6 +27,7 @@ class ExcelMappingController {
         //println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
         Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
         Sheet sheet = workbook.getSheetAt(sheetNumber)
+        sheetName = workbook.getSheetName(sheetNumber)
         
         def nSheets = workbook.getNumberOfSheets()
 
@@ -136,7 +138,7 @@ class ExcelMappingController {
         println "WIDTH: ${width}"
         println "TABLE: ${table}"
         
-        [table: table, width: width, file: fileLocation, sheet: sheetNumber, nSheets: nSheets]
+        [table: table, width: width, file: fileLocation, sheet: sheetNumber, nSheets: nSheets, sheetName: sheetName]
     }
     
     def map() {

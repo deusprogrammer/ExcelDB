@@ -2,6 +2,7 @@ package com.trinary.ExcelDB
 
 import com.lucastex.grails.fileuploader.UFile
 import net.lingala.zip4j.core.ZipFile
+import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
 
 class ZipController {
     def ExcelService
@@ -15,7 +16,8 @@ class ZipController {
         def jobs = []
         
         if (file) {
-            def path = "C:/tmp/unzipped/${(new Date()).getTime()}"
+            def rootPath = CH.config.excel.zip
+            def path = rootPath + (new Date()).getTime()
             
             //Unzip the zip file
             ZipFile zip = new ZipFile(file.path)
@@ -24,10 +26,11 @@ class ZipController {
             //Read the contents of the directory
             def baseDir = new File(path)
             baseDir.eachFileMatch (~/.*.(xls|xlsx)/) { ent ->
-                jobList << ent
+                jobList << ent.toString()
             }
             
             jobList.each { job ->
+                println "JOB: ${job}"
                 jobIds += ExcelService.processExcelFiles(job)             
             }
             
@@ -42,6 +45,6 @@ class ZipController {
     }
     
     def error() {
-        println "ERROR"
+        println "ZipController ERROR"
     }
 }

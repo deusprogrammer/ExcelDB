@@ -15,6 +15,7 @@
     <g:if test="${sheet > 0}">
       <g:link action="show" params="${[file: file, sheet: sheet-1]}">[Prev Sheet]</g:link>
     </g:if>
+    <b>SHEET: ${sheetName}</b>
     <g:if test="${sheet < nSheets - 1}">
       <g:link action="show" params="${[file: file, sheet: sheet+1]}">[Next Sheet]</g:link>
     </g:if>
@@ -44,7 +45,7 @@
             </tbody>
           </table>
         </div>
-        <div style="text-align: right; position: relative; right: 10px"><g:submitButton name="submit" value="Submit" />|<g:link action="pop">[Skip]</g:link></div>
+        <div style="text-align: right; position: relative; right: 10px"><g:submitButton name="submit" value="Submit" />|<g:link controller="failedJob" action="pop"><button>Skip</button></g:link></div>
     </g:form>
   </body>
 </html>

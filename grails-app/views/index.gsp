@@ -157,7 +157,9 @@
                         <h3>Settings</h3>
                         <div class="sub-item">
                           <g:link controller="keywords" action="list">Keywords</g:link><br/>
-                          <g:link controller="rules" action="list">Rules</g:link>
+                          <g:link controller="rules" action="list">Rules</g:link><br/>
+                          <g:link controller="excelDBConfig" action="list">Configuration</g:link><br/>
+                          <g:link controller="user" action="list">Users</g:link><br/>
                         </div>
 		</div>
 	</body>

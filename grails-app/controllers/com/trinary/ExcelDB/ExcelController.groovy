@@ -23,6 +23,6 @@ class ExcelController {
     }
     
     def error() {
-        println "SHIT FUCKED UP!"
+        println "ExcelController ERROR!"
     }
 }

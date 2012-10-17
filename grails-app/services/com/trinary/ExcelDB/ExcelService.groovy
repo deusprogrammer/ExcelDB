@@ -353,6 +353,12 @@ class ExcelService {
     
     def writeDBToFile() {
         def products = Product.list()
+        def markupValue = ExcelDBConfig.findByConfigKey("markupPercentage")
+        def markup
+        
+        if (markupValue) {
+            markup = markupValue.configValue.toDouble()
+        }
         
         def workbook = new HSSFWorkbook()
         def sheet = workbook.createSheet()
@@ -366,12 +372,16 @@ class ExcelService {
         products.eachWithIndex { product, i ->
             row = sheet.createRow(i + 1)
             def productNumber = product.productVendor + "-" + product.productNumber
-            println "PRODUCT NUMBER:      ${productNumber}"
-            println "PRODUCT DESCRIPTION: ${productNumber}"
-            println "PRODUCT PRICE:       ${productNumber}"
+
             row.createCell(0).setCellValue(productNumber)
             row.createCell(1).setCellValue(product.productDescription)
-            row.createCell(2).setCellValue(product.productPrice)
+            def productPrice = product.productPrice
+            def fixedProductPrice = fixPrice(productPrice)
+            if (!productPrice.equals(fixedProductPrice)) {
+                product.productPrice = fixedProductPrice
+                product.save()
+            }
+            row.createCell(2).setCellValue(fixedProductPrice)
         }
         
         sheet.autoSizeColumn(0)
@@ -390,6 +400,16 @@ class ExcelService {
         return filePath
     }
     
+    def fixPrice(def price) {
+        def pattern = /([0-9.]+)/
+        def match = price =~ pattern
+        if (match) {
+            return match[0][1]
+        }
+        else {
+            return "0.00"
+        }
+    }
     
     def getManufacturer(def filePath) {
         def pattern = /([A-Z]{3})-.*/

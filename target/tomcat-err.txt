@@ -1,0 +1,12 @@
+Oct 16, 2012 5:21:14 PM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["http-bio-8080"]
+Oct 16, 2012 5:21:14 PM org.apache.catalina.core.StandardService startInternal
+INFO: Starting service Tomcat
+Oct 16, 2012 5:21:14 PM org.apache.catalina.core.StandardEngine startInternal
+INFO: Starting Servlet Engine: Apache Tomcat/7.0.25
+Oct 16, 2012 5:21:14 PM org.apache.catalina.startup.ContextConfig getDefaultWebXmlFragment
+INFO: No global web.xml found
+Oct 16, 2012 5:21:14 PM org.apache.catalina.startup.TaglibUriRule body
+INFO: TLD skipped. URI: urn:com:sun:jersey:api:view is already defined
+Oct 16, 2012 5:21:15 PM org.apache.catalina.core.ApplicationContext log
+INFO: Initializing Spring root WebApplicationContext

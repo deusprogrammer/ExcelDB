@@ -7,10 +7,10 @@
 
 <html>
     <head>
-        <title>Grails File-Uploader Demo</title>
+        <title>File Upload Failed!</title>
 		<meta name="layout" content="main" />
     </head>
     <body>
-        <h3 style="margin-left:20px;">Upload failed!</h3>
+        <h3 style="margin-left:20px;">File Upload Failed!</h3>
     </body>
 </html>

@@ -65,13 +65,15 @@ environments {
         grails.logging.jul.usebridge = true
         if (System.properties['os.name'].toLowerCase().contains('windows')) {
             excel.root = "C:/tmp/saved/"
+            excel.zip = "C:/tmp/unzipped/"
         } else {
             excel.root = "/tmp/excelDb/saved/"
+            excel.zip = "/tmp/excelDb/unzipped/"
         }
     }
     production {
         grails.logging.jul.usebridge = false
-        grails.serverURL = "http://deusprogrammer.no-ip.org/exceldb"
+        //grails.serverURL = "http://deusprogrammer.no-ip.org/exceldb"
         if (System.properties['os.name'].toLowerCase().contains('windows')) {
             excel.root = "C:/tmp/saved/"
         } else {
