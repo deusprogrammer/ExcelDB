@@ -1,0 +1,8 @@
+ExcelDB Issues
+1) Clean up presentation
+    i.) Get rid of view controller essentially, and jump right to the modification screen.
+2) Check what is causing mark up option to not work.
+3) Make output up to government standards.
+4) Map 3 digit code to company name.
+    i.) Whenever a new code is discovered in the first three digits of the filename, add it to the manufacturer list and let the user add the name later.
+5) Drop incomplete entries (if an entry has empty strings or if there isn't a pattern match for any one of the three fields, drop it).
