@@ -168,6 +168,6 @@ class ExcelMappingController {
         
         ExcelService.processExcelFiles(fileLocation, columnMappings)
         
-        redirect(controller: "failedJob", action: "pop")
+        redirect(controller: "pendingJob", action: "pop")
     }
 }

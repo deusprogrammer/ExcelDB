@@ -145,8 +145,15 @@ class ExcelService {
         def sheetNumber = 0
         
         println "MANUFACTURER: ${manu}"
+		
+		def manufacturer = Manufacturer.findByManufacturerCode(manu)
+		
+		if (!manufacturer) {
+			manufacturer = new Manufacturer(manufacturerCode: manu)
+			manufacturer.save()
+		}
 
-        backgroundService.execute ("Job ${job.id}", {
+        runAsync {
             Product p
 
             println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
@@ -157,121 +164,16 @@ class ExcelService {
             def sheetFound = false
             def dataStartIndex = -1
 
-            if (!columnMappings) {
-                //Row
-                for (def n = 0; n < workbook.getNumberOfSheets() && !sheetFound; n++) {
-                    sheet = workbook.getSheetAt(n)
-                    println "*******SHEET ${n}*******"
-                    for (def i = 0; i < sheet.getLastRowNum(); i++) {
-                        Row row
-                        def rowIsLabel = false
-                        def cellCount = 0
-                        def emptyCount = 0
-
-                        try {
-                            row = sheet.getRow(i)
-                            cellCount = row.getLastCellNum()
-                        }
-                        catch (Exception e) {
-                            println "Row is non existent..."
-                            continue
-                        }
-
-                        //Cell
-                        for (def j = 0; j < row.getLastCellNum(); j++) {
-                            Cell cell = row.getCell(j)
-                            def cellString = cell.toString().trim()
-                            println "CELL DATA (${i},${j}): ${cellString}"
-                            try {
-                                switch (cell.getCellType()) {
-                                    case Cell.CELL_TYPE_STRING:
-                                        switch (getLabelType(cellString, columnLabels)) {
-                                            case ExcelLabel.PRODUCT_NUMBER:
-                                                rowIsLabel = true
-                                                columnVotes["productNumber"] = j
-                                                columnLabels["productNumber"] = cellString
-                                                break
-                                            case ExcelLabel.PRODUCT_DESCRIPTION:
-                                                rowIsLabel = true
-                                                columnVotes["productDescription"] = j
-                                                columnLabels["productDescription"] = cellString
-                                                break
-                                            case ExcelLabel.PRODUCT_PRICE:
-                                                rowIsLabel = true
-                                                columnVotes["productPrice"] = j
-                                                columnLabels["productPrice"] = cellString
-                                                break
-                                        }
-                                        break
-                                    case Cell.CELL_TYPE_NUMERIC:
-                                        break
-                                    case Cell.CELL_TYPE_BLANK:
-                                        emptyCount++
-                                        break
-                                    default:
-                                        break
-                                }
-                            }
-                            catch (Exception e) {
-                                emptyCount++
-                            }
-                        }
-
-                        //Determine facts about the line
-                        if ((cellCount - emptyCount) < 4 && !rowIsLabel) {
-                            //Throw away
-                            println "\t\tRow is mostly empty...discarding"
-                        }
-                        else if (rowIsLabel) {
-                            //Set columns
-                            labelFound = true
-                            println "\t\tRow appears to be a label"
-                        }
-                        else {
-                            //Jump out of loop.  Column types are known
-                            if (labelFound) {
-                                println "Columns are identified"
-                                sheetNumber = n
-                                sheetFound = true
-                                if (dataStartIndex == -1) {
-                                    dataStartIndex = i
-                                    //println "Data starts at line ${dataStartIndex}"
-                                }
-                                break
-                            }
-                            //Data has been found before any kind of label
-                            //Parse columns with regex to determine types
-                            else {
-                                println "\t\tRow appears to contain data"
-                                println "\t\tNo rules found...assuming failure"
-                                break
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-                columnVotes["productNumber"] = columnMappings["productNumber"]
-                columnVotes["productDescription"] = columnMappings["productDescription"]
-                columnVotes["productPrice"] = columnMappings["productPrice"]
-                sheetNumber = Integer.parseInt(columnMappings["sheet"])
-                dataStartIndex = Integer.parseInt(columnMappings["row"])
-            }
+            columnVotes["productNumber"] = columnMappings["productNumber"]
+            columnVotes["productDescription"] = columnMappings["productDescription"]
+            columnVotes["productPrice"] = columnMappings["productPrice"]
+            sheetNumber = Integer.parseInt(columnMappings["sheet"])
+            dataStartIndex = Integer.parseInt(columnMappings["row"])
 
             println "COLUMNS ARE"
             println "\tProduct Number:      "  + columnVotes["productNumber"]
             println "\tProduct Description: "  + columnVotes["productDescription"]
             println "\tProduct Price:       "  + columnVotes["productPrice"]
-
-            if (columnVotes["productNumber"] == -1 || columnVotes["productDescription"] == -1 || columnVotes["productPrice"] == -1) {
-                println "Unable to identify all columns!"
-                setDone(jobId, "Failed")
-
-                def failure = new FailedJob(fileLocation: fileLocation)
-                failure.save(flush: true)
-
-                return
-            }
 
             sheet = workbook.getSheetAt(sheetNumber)
             setSteps(jobId, sheet.getLastRowNum())
@@ -346,7 +248,7 @@ class ExcelService {
             }
             incrementStep(jobId)
             setDone(jobId, "Success")
-        })
+        }
         
         return jobId
     }

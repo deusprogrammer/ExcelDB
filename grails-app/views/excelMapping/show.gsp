@@ -45,7 +45,7 @@
             </tbody>
           </table>
         </div>
-        <div style="text-align: right; position: relative; right: 10px"><g:submitButton name="submit" value="Submit" />|<g:link controller="failedJob" action="pop"><button>Skip</button></g:link></div>
+        <div style="text-align: right; position: relative; right: 10px"><g:submitButton name="submit" value="Submit" />|<g:link controller="pendingJob" action="pop"><button>Skip</button></g:link></div>
     </g:form>
   </body>
 </html>

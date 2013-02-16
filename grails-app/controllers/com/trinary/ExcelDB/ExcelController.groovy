@@ -3,8 +3,6 @@ package com.trinary.ExcelDB
 import com.lucastex.grails.fileuploader.UFile
 
 class ExcelController {
-    def ExcelService
-    
     def index() { }
     
     def success() {
@@ -12,14 +10,11 @@ class ExcelController {
         def jobs = []
                 
         if (file) {
-            def job = [:]
-            job["id"] = ExcelService.processExcelFiles(file.path)
-            job["file"] = file.path
-            jobs += job
+			def pendingJob = new PendingJob(fileLocation: file.path)
+			pendingJob.save()
         }
-        
-        //[jobs: jobs]
-        redirect(controller: "excelJob", action: "list")
+
+        redirect(uri: "/")
     }
     
     def error() {

@@ -30,19 +30,12 @@ class ZipController {
             }
             
             jobList.each { job ->
-                job = job.replaceAll("\\\\", "/")
-                println "JOB: ${job}"
-                jobIds += ExcelService.processExcelFiles(job)             
-            }
-            
-            jobIds.eachWithIndex { jobId, index ->
-                def fileName = jobList[index]
-                jobs += [file: jobList[index], id: jobId]
+				def pendingJob = new PendingJob(fileLocation: job.replaceAll("\\\\", "/"))
+				pendingJob.save()
             }
         }
                 
-        //[params:params, jobs: jobs]
-        redirect(controller: "excelJob", action: "list")
+        redirect(uri: "/")
     }
     
     def error() {

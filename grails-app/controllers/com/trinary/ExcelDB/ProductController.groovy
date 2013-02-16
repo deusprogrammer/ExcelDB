@@ -15,6 +15,25 @@ class ProductController {
         params.max = Math.min(params.max ? params.int('max') : 10, 100)
         [productInstanceList: Product.list(params), productInstanceTotal: Product.count()]
     }
+	
+	def listInvalidEntries() {
+		def offset = (params.offset ? params.offset : 0).toInteger()
+		def max = Math.min(params.max ? params.int('max') : 10, 100).toInteger()
+		
+		def lower = offset 
+		def upper = offset + max
+		
+		def missingCol1 = Product.findAllByProductNumber("")
+		def missingCol2 = Product.findAllByProductDescription("")
+		def missingCol3 = Product.findAllByProductPrice("")
+		def allInvalid = missingCol1 + missingCol2 + missingCol3
+		
+		println "LOWER: ${lower}"
+		println "UPPER: ${upper}"
+		allInvalid = allInvalid.subList(lower, upper)
+		
+		render(view: "list", model: [productInstanceList: allInvalid, productInstanceTotal: allInvalid.size()])
+	}
 
     def create() {
         [productInstance: new Product(params)]

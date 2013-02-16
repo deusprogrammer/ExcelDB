@@ -1,6 +1,7 @@
 <%@ page import="com.trinary.ExcelDB.ExcelJob" %>
-<%@ page import="com.trinary.ExcelDB.FailedJob" %>
+<%@ page import="com.trinary.ExcelDB.PendingJob" %>
 <%@ page import="com.trinary.ExcelDB.Product" %>
+<%@ page import="com.trinary.ExcelDB.Manufacturer" %>
 <html>
 	<head>
 		<meta name="layout" content="main"/>
@@ -134,30 +135,38 @@
                         <g:if test="${Product.count() > 0}">
                           <h3>Product Database</h3>
                           <div class="sub-item">
+                          	There are currently <b>${Product.count()}</b> products in the database.<br/>
                             <g:link controller="product" action="list">Product List</g:link><br/>
                             <g:link controller="product" action="writeOut">Request Excel Spreadsheet</g:link><br/>
                           </div>
                         </g:if>
               
-                        <g:if test="${ExcelJob.count() > 0}">
-                          <h3>View Pending Jobs</h3>
+                        <g:if test="${ExcelJob.findAllByStatusNotEqual("Success").size() > 0}">
+                          <h3>View Running Jobs</h3>
                           <div class="sub-item">
+							There are currently <b>${ExcelJob.findAllByStatusNotEqual("Success").size()}</b> jobs running.<br/>                          	
                             <g:link controller="excelJob" action="list">Jobs List</g:link>
                           </div>
                         </g:if>
                         
-                        <g:if test="${FailedJob.count() > 0}">
-                          <h3>Process Failed Jobs</h3>
+                        <g:if test="${PendingJob.count() > 0}">
+                          <h3>Process Pending Jobs</h3>
                           <div class="sub-item">
-                            <g:link controller="failedJob" action="pop">Map Failed Excel Jobs</g:link><br/>
-                            <g:link controller="failedJob" action="list">List Failed Excel Jobs</g:link>
+                          	There are currently <b>${PendingJob.count()}</b> jobs waiting to be mapped.<br/>
+                            <g:link controller="pendingJob" action="pop">Map Pending Excel Jobs</g:link><br/>
+                          </div>
+                        </g:if>
+                        
+                        <g:if test="${Manufacturer.count() > 0}">
+                          <h3>Manufacturers</h3>
+                          <div class="sub-item">
+                          	There are currently <b>${Manufacturer.count()}</b> manufacturers in the database.<br/>
+                            <g:link controller="manufacturer" action="list">List and Edit Manufacturers</g:link><br/>
                           </div>
                         </g:if>
                         
                         <h3>Settings</h3>
                         <div class="sub-item">
-                          <g:link controller="keywords" action="list">Keywords</g:link><br/>
-                          <g:link controller="rules" action="list">Rules</g:link><br/>
                           <g:link controller="excelDBConfig" action="list">Configuration</g:link><br/>
                           <g:link controller="user" action="list">Users</g:link><br/>
                         </div>
