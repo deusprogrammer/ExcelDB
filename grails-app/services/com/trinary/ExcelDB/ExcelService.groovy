@@ -130,17 +130,29 @@ class ExcelService {
     //Excel Functions
 
     def processExcelFiles(def fileLocation, def columnMappings = null) throws Exception, FileNotFoundException, IOException {
-        def jobId
-        def manu = getManufacturer(fileLocation)
-        def failedFiles = []
-        Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
-        Sheet sheet
-        ExcelJob job = new ExcelJob()
-                
-        job.fileName = fileLocation
-        job.save(flush: true)
-        
-        jobId = job.id
+		ExcelJob job = new ExcelJob()
+		
+		job.fileName = fileLocation
+		job.save(flush: true)
+
+		def jobId = job.id
+		
+		Sheet sheet
+		Workbook workbook
+		def manu
+		
+		try {
+	        manu = getManufacturer(fileLocation)
+	        workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
+	        
+		} catch (Exception e) {
+			println "EXCEPTION: ${e.getMessage()}"
+			job.status = "Failed"
+			job.step = 1
+			job.nSteps = 1
+			job.save(flush: true)
+			return jobId
+		}
 
         def sheetNumber = 0
         
@@ -236,11 +248,19 @@ class ExcelService {
                         println "Unable to find existing product.  Adding new one."
                         p = new Product()
                     }
+					
+					def productPrice       = row.getCell(columnVotes["productPrice"]).toString()
+					def productDescription = row.getCell(columnVotes["productDescription"]).toString()
                     
                     p.productNumber = productNumber
                     p.productPrice = row.getCell(columnVotes["productPrice"]).toString()
                     p.productDescription = row.getCell(columnVotes["productDescription"]).toString()
                     p.productVendor = manu
+					
+					if (!productNumber || productNumber == "" || !productPrice || productPrice == "" || !productPrice.replace('$', '').isNumber()) {
+						continue	
+					}
+					
                     p.save(flush: true)
                 }
 
