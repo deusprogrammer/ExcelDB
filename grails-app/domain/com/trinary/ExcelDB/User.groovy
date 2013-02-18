@@ -17,5 +17,6 @@ class User {
     def beforeUpdate = {beforeSave()}
     
     static constraints = {
+		salt nullable: true
     }
 }

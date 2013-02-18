@@ -15,8 +15,6 @@ import java.text.SimpleDateFormat
 import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
 
 class ExcelService {
-    def backgroundService
-    
     //DB Helper functions
     
     def setDone(def jobId, def message) {
@@ -58,73 +56,6 @@ class ExcelService {
                 job.save(flush: true)
             }
         }        
-    }
-    
-    def position(def s, def l) {
-        for(def i = 0; i < l.size(); i++) {
-            if (l[i].equals(s.toLowerCase())) {
-                return i
-            }
-        }
-
-        return -1
-    }
-    
-    //Parsing Functions
-
-    def precedes (def s1, def s2, def l) {
-        def s1Pos = position(s1, l)
-        def s2Pos = position(s2, l)
-        
-        if (s2.equals("") && s1Pos != -1)
-            return true
-
-        if (s1Pos == -1 || s2Pos == -1)
-            return false
-
-        if (s1Pos < s2Pos) {
-            return true
-        }
-        else if (s2Pos >= s1Pos) {
-            return false
-        }
-    }
-    
-    ExcelLabel getLabelType(def string, def old = null) {
-        if (!old) {
-            old = [productNumber: "", productDescription: "", productPrice: ""]
-        }
-        
-        if (isProductNumber(string, old["productNumber"])) {
-            return ExcelLabel.PRODUCT_NUMBER
-        }
-        else if (isProductDescription(string, old["productDescription"])) {
-            return ExcelLabel.PRODUCT_DESCRIPTION
-        }
-        else if (isProductPrice(string, old["productPrice"])) {
-            return ExcelLabel.PRODUCT_PRICE
-        }
-        else {
-            return ExcelLabel.UNKNOWN
-        }
-    }
-    
-    def isProductNumber(def string, def old) {
-        def productNumberLabels = Keywords.getKeywords("productNumber")
-        
-        return precedes(string, old, productNumberLabels)
-    }
-    
-    def isProductDescription(def string, def old) {
-        def productDescriptionLabels = Keywords.getKeywords("productDescription")
-        
-        return precedes(string, old, productDescriptionLabels)
-    }
-    
-    def isProductPrice(def string, def old) {
-        def productPriceLabels = Keywords.getKeywords("productPrice")
-
-        return precedes(string, old, productPriceLabels)
     }
     
     //Excel Functions
@@ -218,19 +149,8 @@ class ExcelService {
                 //Check each cell to determine if the row is empty (mostly)
                 for (def j = 0; j < row.getLastCellNum(); j++) {
                     Cell cell = row.getCell(j)
-                    def cellString = cell.toString()
-
                     try {
                         switch (cell.getCellType()) {
-                            case Cell.CELL_TYPE_STRING:
-                                switch (getLabelType(cellString)) {
-                                    case ExcelLabel.PRODUCT_NUMBER:
-                                    case ExcelLabel.PRODUCT_DESCRIPTION:
-                                    case ExcelLabel.PRODUCT_PRICE:
-                                        rowIsLabel = true
-                                        break
-                                }
-                                break
                             case Cell.CELL_TYPE_BLANK:
                                 emptyCount++
                                 break
@@ -243,7 +163,7 @@ class ExcelService {
                     }
                 }
 
-                if ((cellCount - emptyCount) >= 3 && !rowIsLabel) {
+                if ((cellCount - emptyCount) >= 3) {
                     String productNumber = row.getCell(columnVotes["productNumber"]).toString()
                     println "ROW: ${i}"
                     println "ADDING PRODUCT NUMBER ${productNumber}"
@@ -296,25 +216,29 @@ class ExcelService {
         row.createCell(0).setCellValue("Product Number")
         row.createCell(1).setCellValue("Product Description")
         row.createCell(2).setCellValue("Product Price")
+		row.createCell(3).setCellValue("Product Vendor")
         
         products.eachWithIndex { product, i ->
             row = sheet.createRow(i + 1)
             def productNumber = product.productVendor + "-" + product.productNumber
+			def productManufacturer = Manufacturer.findByManufacturerCode(product.productVendor)
 
             row.createCell(0).setCellValue(productNumber)
             row.createCell(1).setCellValue(product.productDescription)
-            def productPrice = product.productPrice
+            def productPrice = product.productPrice * markup
             def fixedProductPrice = fixPrice(productPrice)
             if (!productPrice.equals(fixedProductPrice)) {
                 product.productPrice = fixedProductPrice
                 product.save()
             }
             row.createCell(2).setCellValue(fixedProductPrice)
+			row.createCell(3).setCellValue(productManufacturer.manufacturerName)
         }
         
         sheet.autoSizeColumn(0)
         sheet.autoSizeColumn(1)
         sheet.autoSizeColumn(2)
+		sheet.autoSizeColumn(3)
         
         def date = Calendar.getInstance()
         def sdf = new SimpleDateFormat("yyyyMMddHHmmss")
