@@ -192,6 +192,12 @@ class ExcelService {
             
             println "SHEET:      ${sheetNumber}"
             println "DATA START: ${dataStartIndex}"
+			
+			def state = State.findByKey("outdated")
+			
+			if (state) {
+				state.value = "true"
+			}
 
             //Add excel file to database
             for (def i = dataStartIndex; i < sheet.getLastRowNum(); i++) {
@@ -318,6 +324,16 @@ class ExcelService {
         def fileOut = new FileOutputStream(filePath)
         workbook.write(fileOut)
         fileOut.close()
+		
+		def state = State.findByKey("outdated")
+		if (state) {
+			state.value = "false"
+		}
+		
+		state = State.findByKey("lastGenerated")
+		if (state) {
+			state.value = filePath
+		}
         
         return filePath
     }

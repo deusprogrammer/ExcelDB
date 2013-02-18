@@ -122,8 +122,21 @@ class ProductController {
     }
     
     def writeOut() {
-        def filePath = ExcelService.writeDBToFile()
-        
+		def filePath
+		
+		def state = State.findByKey("outdated")
+		if (!state || state.value == "false") {
+			state = State.findByKey("lastGenerated")
+			filePath = state?.value
+		} else {
+			filePath = ExcelService.writeDBToFile()
+		}
+		
+		if (!filePath) {
+			response.status = 404
+			return
+		}
+		
         def file = new File(filePath) 
         response.setHeader("Content-Type", "application/excel") 
         response.setHeader("Content-Disposition", "attachment; filename=${file.getName()}") 
