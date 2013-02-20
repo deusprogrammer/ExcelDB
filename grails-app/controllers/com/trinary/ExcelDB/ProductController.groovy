@@ -123,7 +123,7 @@ class ProductController {
     
     def writeOut() {
 		def filePath
-		
+
 		def state = State.findByKey("outdated")
 		if (!state || state.value == "false") {
 			state = State.findByKey("lastGenerated")

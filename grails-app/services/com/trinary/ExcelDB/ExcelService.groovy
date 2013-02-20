@@ -175,17 +175,17 @@ class ExcelService {
                         p = new Product()
                     }
 					
-					def productPrice       = row.getCell(columnVotes["productPrice"]).toString()
+					def productPrice       = row.getCell(columnVotes["productPrice"]).toString().replace('$', '')
 					def productDescription = row.getCell(columnVotes["productDescription"]).toString()
-                    
-                    p.productNumber = productNumber
-                    p.productPrice = row.getCell(columnVotes["productPrice"]).toString()
-                    p.productDescription = row.getCell(columnVotes["productDescription"]).toString()
-                    p.productVendor = manu
 					
-					if (!productNumber || productNumber == "" || !productPrice || productPrice == "" || !productPrice.replace('$', '').isNumber()) {
+					if (!productNumber || productNumber == "" || !productPrice || productPrice == "" || !productPrice.isNumber()) {
 						continue	
 					}
+					
+					p.productNumber = productNumber
+					p.productPrice = fixPrice(productPrice)
+					p.productDescription = productDescription
+					p.productVendor = manu
 					
                     p.save(flush: true)
                 }
@@ -213,32 +213,39 @@ class ExcelService {
         
         //Write header
         def row = sheet.createRow(0)
-        row.createCell(0).setCellValue("Product Number")
-        row.createCell(1).setCellValue("Product Description")
-        row.createCell(2).setCellValue("Product Price")
-		row.createCell(3).setCellValue("Product Vendor")
+        row.createCell(0).setCellValue("PART_NUMBER")
+        row.createCell(1).setCellValue("PART_NAME")
+		row.createCell(2).setCellValue("PRICE")
+        row.createCell(3).setCellValue("UNIT_OF_ISSUE")
+		row.createCell(4).setCellValue("ITEMS_PER_UNIT")
+		row.createCell(5).setCellValue("OEM_NAME")
+		row.createCell(6).setCellValue("OEM_PART_NO")
+		row.createCell(7).setCellValue("DESCRIPTION")
         
         products.eachWithIndex { product, i ->
             row = sheet.createRow(i + 1)
             def productNumber = product.productVendor + "-" + product.productNumber
 			def productManufacturer = Manufacturer.findByManufacturerCode(product.productVendor)
+            def productPrice = product.productPrice.toString().toDouble() * (1.0 + markup)
 
-            row.createCell(0).setCellValue(productNumber)
-            row.createCell(1).setCellValue(product.productDescription)
-            def productPrice = product.productPrice * markup
-            def fixedProductPrice = fixPrice(productPrice)
-            if (!productPrice.equals(fixedProductPrice)) {
-                product.productPrice = fixedProductPrice
-                product.save()
-            }
-            row.createCell(2).setCellValue(fixedProductPrice)
-			row.createCell(3).setCellValue(productManufacturer.manufacturerName)
+			row.createCell(0).setCellValue(productNumber)
+			row.createCell(1).setCellValue(product.productDescription)
+            row.createCell(2).setCellValue("\$" + productPrice)
+			row.createCell(3).setCellValue("EA")
+			row.createCell(4).setCellValue("1")
+			row.createCell(5).setCellValue(product.productNumber)
+			row.createCell(6).setCellValue(productManufacturer.manufacturerName)
+			row.createCell(7).setCellValue(productManufacturer.manufacturerName + "- " + product.productDescription)
         }
         
         sheet.autoSizeColumn(0)
         sheet.autoSizeColumn(1)
         sheet.autoSizeColumn(2)
 		sheet.autoSizeColumn(3)
+		sheet.autoSizeColumn(4)
+		sheet.autoSizeColumn(5)
+		sheet.autoSizeColumn(6)
+		sheet.autoSizeColumn(7)
         
         def date = Calendar.getInstance()
         def sdf = new SimpleDateFormat("yyyyMMddHHmmss")
@@ -263,14 +270,8 @@ class ExcelService {
     }
     
     def fixPrice(def price) {
-        def pattern = /([0-9.]+)/
-        def match = price =~ pattern
-        if (match) {
-            return match[0][1]
-        }
-        else {
-            return "0.00"
-        }
+		def dPrice = price.toString().toDouble().round(2)
+		return dPrice.toString()
     }
     
     def getManufacturer(def filePath) {
