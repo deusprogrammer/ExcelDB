@@ -250,6 +250,7 @@ class ExcelService {
 		try {
 	        products.eachWithIndex { product, i ->
 	            row = sheet.createRow(i + 1)
+				//println "ROW: ${i + 1}"
 	            def productNumber = product.productVendor + "-" + product.productNumber
 				def productManufacturer = Manufacturer.findByManufacturerCode(product.productVendor)
 	            def productPrice = (product.productPrice.toString().toDouble() * (1.0 + markup)).round(2)
@@ -259,8 +260,8 @@ class ExcelService {
 	            row.createCell(2).setCellValue("\$" + productPrice)
 				row.createCell(3).setCellValue("EA")
 				row.createCell(4).setCellValue("1")
-				row.createCell(5).setCellValue(product.productNumber)
-				row.createCell(6).setCellValue(productManufacturer.manufacturerName)
+				row.createCell(5).setCellValue(productManufacturer.manufacturerName)
+				row.createCell(6).setCellValue(product.productNumber)
 				row.createCell(7).setCellValue(productManufacturer.manufacturerName + "- " + product.productDescription)
 	        }
 		} catch (Exception e) {
