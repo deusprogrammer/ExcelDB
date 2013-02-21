@@ -107,11 +107,23 @@ class ExcelService {
             def sheetFound = false
             def dataStartIndex = -1
 			
-			if (!columnMappings["productName"]) {
+			if (columnMappings["productName"] == null) {
 				columnVotes["productName"] = columnMappings["productNumber"]
 			} else {
 				columnVotes["productName"] = columnMappings["productName"]
 			}
+			
+			if (columnMappings["productNumber"] == null || columnMappings["productDescription"] == null || columnMappings["productPrice"] == null) {
+				println "COLUMNS ARE"
+				println "\tProduct Number:      "  + columnMappings["productNumber"]
+				println "\tProduct Name:        "  + columnMappings["productName"]
+				println "\tProduct Description: "  + columnMappings["productDescription"]
+				println "\tProduct Price:       "  + columnMappings["productPrice"]
+				println "FAILED!"
+				setDone(jobId, "Failure")
+				return
+			}
+			
 
             columnVotes["productNumber"] = columnMappings["productNumber"]
             columnVotes["productDescription"] = columnMappings["productDescription"]
