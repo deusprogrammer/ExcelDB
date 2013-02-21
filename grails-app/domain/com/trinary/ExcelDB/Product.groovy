@@ -2,6 +2,7 @@ package com.trinary.ExcelDB
 
 class Product {
     String productNumber
+	String productName
     String productDescription
     String productVendor
     String productPrice

@@ -124,13 +124,17 @@ class ProductController {
     def writeOut() {
 		def filePath
 
+		filePath = ExcelService.writeDBToFile()
+		
+		/*
 		def state = State.findByKey("outdated")
 		if (!state || state.value == "false") {
 			state = State.findByKey("lastGenerated")
 			filePath = state?.value
 		} else {
-			filePath = ExcelService.writeDBToFile()
+			
 		}
+		*/
 		
 		if (!filePath) {
 			response.status = 404

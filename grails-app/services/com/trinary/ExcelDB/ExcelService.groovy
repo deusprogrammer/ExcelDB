@@ -106,6 +106,12 @@ class ExcelService {
             def labelFound = false
             def sheetFound = false
             def dataStartIndex = -1
+			
+			if (!columnMappings["productName"]) {
+				columnVotes["productName"] = columnMappings["productNumber"]
+			} else {
+				columnVotes["productName"] = columnMappings["productName"]
+			}
 
             columnVotes["productNumber"] = columnMappings["productNumber"]
             columnVotes["productDescription"] = columnMappings["productDescription"]
@@ -115,6 +121,7 @@ class ExcelService {
 
             println "COLUMNS ARE"
             println "\tProduct Number:      "  + columnVotes["productNumber"]
+			println "\tProduct Name:        "  + columnVotes["productName"]
             println "\tProduct Description: "  + columnVotes["productDescription"]
             println "\tProduct Price:       "  + columnVotes["productPrice"]
 
@@ -167,27 +174,33 @@ class ExcelService {
                     String productNumber = row.getCell(columnVotes["productNumber"]).toString()
                     println "ROW: ${i}"
                     println "ADDING PRODUCT NUMBER ${productNumber}"
-                    
-                    p = Product.findByProductNumberAndProductVendor(productNumber, manu)
-                    
-                    if (!p) {
-                        println "Unable to find existing product.  Adding new one."
-                        p = new Product()
-                    }
 					
 					def productPrice       = row.getCell(columnVotes["productPrice"]).toString().replace('$', '')
+					def productName        = row.getCell(columnVotes["productName"]).toString()
 					def productDescription = row.getCell(columnVotes["productDescription"]).toString()
 					
 					if (!productNumber || productNumber == "" || !productPrice || productPrice == "" || !productPrice.isNumber()) {
 						continue	
 					}
-					
-					p.productNumber = productNumber
-					p.productPrice = fixPrice(productPrice)
-					p.productDescription = productDescription
-					p.productVendor = manu
-					
-                    p.save(flush: true)
+
+					try {
+						p = Product.findByProductNumberAndProductVendor(productNumber, manu)
+						
+						if (!p) {
+							println "Unable to find existing product.  Adding new one."
+							p = new Product()
+						} 
+						
+						p.productNumber = productNumber
+						p.productPrice = fixPrice(productPrice)
+						p.productName  = productName
+						p.productDescription = productDescription
+						p.productVendor = manu
+						
+	                    p.save(flush: true)
+					} catch (Exception e) {
+						println "EXCEPTION: " + e.getMessage()
+					}
                 }
 
                 incrementStep(jobId)
@@ -222,21 +235,25 @@ class ExcelService {
 		row.createCell(6).setCellValue("OEM_PART_NO")
 		row.createCell(7).setCellValue("DESCRIPTION")
         
-        products.eachWithIndex { product, i ->
-            row = sheet.createRow(i + 1)
-            def productNumber = product.productVendor + "-" + product.productNumber
-			def productManufacturer = Manufacturer.findByManufacturerCode(product.productVendor)
-            def productPrice = product.productPrice.toString().toDouble() * (1.0 + markup)
-
-			row.createCell(0).setCellValue(productNumber)
-			row.createCell(1).setCellValue(product.productDescription)
-            row.createCell(2).setCellValue("\$" + productPrice)
-			row.createCell(3).setCellValue("EA")
-			row.createCell(4).setCellValue("1")
-			row.createCell(5).setCellValue(product.productNumber)
-			row.createCell(6).setCellValue(productManufacturer.manufacturerName)
-			row.createCell(7).setCellValue(productManufacturer.manufacturerName + "- " + product.productDescription)
-        }
+		try {
+	        products.eachWithIndex { product, i ->
+	            row = sheet.createRow(i + 1)
+	            def productNumber = product.productVendor + "-" + product.productNumber
+				def productManufacturer = Manufacturer.findByManufacturerCode(product.productVendor)
+	            def productPrice = (product.productPrice.toString().toDouble() * (1.0 + markup)).round(2)
+	
+				row.createCell(0).setCellValue(productNumber)
+				row.createCell(1).setCellValue(product.productName)
+	            row.createCell(2).setCellValue("\$" + productPrice)
+				row.createCell(3).setCellValue("EA")
+				row.createCell(4).setCellValue("1")
+				row.createCell(5).setCellValue(product.productNumber)
+				row.createCell(6).setCellValue(productManufacturer.manufacturerName)
+				row.createCell(7).setCellValue(productManufacturer.manufacturerName + "- " + product.productDescription)
+	        }
+		} catch (Exception e) {
+			println "EXCEPTION: " + e.getMessage()
+		}
         
         sheet.autoSizeColumn(0)
         sheet.autoSizeColumn(1)

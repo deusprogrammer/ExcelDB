@@ -135,8 +135,8 @@ class ExcelMappingController {
             }
         }
 
-        println "WIDTH: ${width}"
-        println "TABLE: ${table}"
+        //println "WIDTH: ${width}"
+        //println "TABLE: ${table}"
         
         [table: table, width: width, file: fileLocation, sheet: sheetNumber, nSheets: nSheets, sheetName: sheetName]
     }
@@ -154,6 +154,9 @@ class ExcelMappingController {
             case "Product Price":
                 columnMappings["productPrice"] = i
                 break
+			case "Product Name":
+				columnMappings["productName"] = i
+				break
             case "Product Description":
                 columnMappings["productDescription"] = i
                 break
