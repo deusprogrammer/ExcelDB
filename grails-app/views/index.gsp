@@ -160,7 +160,9 @@
                         <g:if test="${Manufacturer.count() > 0}">
                           <h3>Manufacturers</h3>
                           <div class="sub-item">
+                          	<g:if test="${Manufacturer.count() - Manufacturer.findAllByManufacturerNameNotEqual("").size() > 0}">
 							There are currently <b>${Manufacturer.count() - Manufacturer.findAllByManufacturerNameNotEqual("").size()}</b> manufacturers that still need to be identified in your database.<br/>
+							</g:if>		
                           	There are currently <b>${Manufacturer.findAllByManufacturerNameNotEqual("").size()}</b> identified manufacturers in your database.<br/>
                             <g:link controller="manufacturer" action="list">List and Edit Manufacturers</g:link><br/>
                           </div>
