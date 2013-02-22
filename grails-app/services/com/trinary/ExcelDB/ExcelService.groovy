@@ -16,6 +16,34 @@ import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
 
 class ExcelService {
     //DB Helper functions
+	
+	def setExportDone(def jobId, def message) {
+		def job = ExportJob.get(jobId)
+		
+		if (job) {
+			synchronized(job) {
+				job.lock()
+				job.done = true
+				job.status = message
+				job.step = job.steps
+
+				job.save(flush: true)
+			}
+		}
+	}
+	
+	def incrementExportStep(def jobId) {
+		def job = ExportJob.get(jobId)
+		
+		if (job) {
+			synchronized(job) {
+				job.lock()
+				job.step++
+
+				job.save(flush: true)
+			}
+		}
+	}
     
     def setDone(def jobId, def message) {
         def job = ExcelJob.get(jobId)
@@ -191,7 +219,7 @@ class ExcelService {
 					def productName        = row.getCell(columnVotes["productName"]).toString()
 					def productDescription = row.getCell(columnVotes["productDescription"]).toString()
 					
-					if (!productNumber || productNumber == "" || !productPrice || productPrice == "" || !productPrice.isNumber()) {
+					if (!productNumber || productNumber == "" || !productDescription || productDescription == "" || !productPrice || productPrice == "" || !productPrice.isNumber()) {
 						continue	
 					}
 
@@ -228,75 +256,83 @@ class ExcelService {
         def products = Product.list()
         def markupValue = ExcelDBConfig.findByConfigKey("markupPercentage")
         def markup
-        
-        if (markupValue) {
-            markup = markupValue.configValue.toDouble()
-        }
-        
-        def workbook = new HSSFWorkbook()
-        def sheet = workbook.createSheet()
-        
-        //Write header
-        def row = sheet.createRow(0)
-        row.createCell(0).setCellValue("PART_NUMBER")
-        row.createCell(1).setCellValue("PART_NAME")
-		row.createCell(2).setCellValue("PRICE")
-        row.createCell(3).setCellValue("UNIT_OF_ISSUE")
-		row.createCell(4).setCellValue("ITEMS_PER_UNIT")
-		row.createCell(5).setCellValue("OEM_NAME")
-		row.createCell(6).setCellValue("OEM_PART_NO")
-		row.createCell(7).setCellValue("DESCRIPTION")
-        
-		try {
-	        products.eachWithIndex { product, i ->
-	            row = sheet.createRow(i + 1)
-				//println "ROW: ${i + 1}"
-	            def productNumber = product.productVendor + "-" + product.productNumber
-				def productManufacturer = Manufacturer.findByManufacturerCode(product.productVendor)
-	            def productPrice = (product.productPrice.toString().toDouble() * (1.0 + markup)).round(2)
-	
-				row.createCell(0).setCellValue(productNumber)
-				row.createCell(1).setCellValue(product.productName)
-	            row.createCell(2).setCellValue("\$" + productPrice)
-				row.createCell(3).setCellValue("EA")
-				row.createCell(4).setCellValue("1")
-				row.createCell(5).setCellValue(productManufacturer.manufacturerName)
-				row.createCell(6).setCellValue(product.productNumber)
-				row.createCell(7).setCellValue(productManufacturer.manufacturerName + "- " + product.productDescription)
+		
+		def date = Calendar.getInstance()
+		def sdf = new SimpleDateFormat("yyyyMMddHHmmss")
+		def time = sdf.format(date.getTime())
+		
+		def filePath = CH.config.excel.root + time + ".xls"
+		
+		def exportJob = new ExportJob(step: 0, steps: Product.count(), filename: filePath)
+		exportJob.save(flush: true)
+		def exportJobId = exportJob.id
+		
+		runAsync {
+	        if (markupValue) {
+	            markup = markupValue.configValue.toDouble()
 	        }
-		} catch (Exception e) {
-			println "EXCEPTION: " + e.getMessage()
-		}
-        
-        sheet.autoSizeColumn(0)
-        sheet.autoSizeColumn(1)
-        sheet.autoSizeColumn(2)
-		sheet.autoSizeColumn(3)
-		sheet.autoSizeColumn(4)
-		sheet.autoSizeColumn(5)
-		sheet.autoSizeColumn(6)
-		sheet.autoSizeColumn(7)
-        
-        def date = Calendar.getInstance()
-        def sdf = new SimpleDateFormat("yyyyMMddHHmmss")
-        def time = sdf.format(date.getTime())
-        
-        def filePath = CH.config.excel.root + time + ".xls"
-        def fileOut = new FileOutputStream(filePath)
-        workbook.write(fileOut)
-        fileOut.close()
+	        
+	        def workbook = new HSSFWorkbook()
+	        def sheet = workbook.createSheet()
+	        
+	        //Write header
+	        def row = sheet.createRow(0)
+	        row.createCell(0).setCellValue("PART_NUMBER")
+	        row.createCell(1).setCellValue("PART_NAME")
+			row.createCell(2).setCellValue("PRICE")
+	        row.createCell(3).setCellValue("UNIT_OF_ISSUE")
+			row.createCell(4).setCellValue("ITEMS_PER_UNIT")
+			row.createCell(5).setCellValue("OEM_NAME")
+			row.createCell(6).setCellValue("OEM_PART_NO")
+			row.createCell(7).setCellValue("DESCRIPTION")
+	        
+			try {
+		        products.eachWithIndex { product, i ->
+		            row = sheet.createRow(i + 1)
+					//println "ROW: ${i + 1}"
+		            def productNumber = product.productVendor + "-" + product.productNumber
+					def productManufacturer = Manufacturer.findByManufacturerCode(product.productVendor)
+		            def productPrice = (product.productPrice.toString().toDouble() * (1.0 + markup)).round(2)
 		
-		def state = State.findByKey("outdated")
-		if (state) {
-			state.value = "false"
-		}
-		
-		state = State.findByKey("lastGenerated")
-		if (state) {
-			state.value = filePath
-		}
-        
-        return filePath
+					row.createCell(0).setCellValue(productNumber)
+					row.createCell(1).setCellValue(product.productName)
+		            row.createCell(2).setCellValue("\$" + productPrice)
+					row.createCell(3).setCellValue("EA")
+					row.createCell(4).setCellValue("1")
+					row.createCell(5).setCellValue(productManufacturer.manufacturerName)
+					row.createCell(6).setCellValue(product.productNumber)
+					row.createCell(7).setCellValue(productManufacturer.manufacturerName + "- " + product.productDescription)
+					incrementExportStep(exportJobId)
+		        }
+			} catch (Exception e) {
+				println "EXCEPTION: " + e.getMessage()
+			}
+	        
+	        sheet.autoSizeColumn(0)
+	        sheet.autoSizeColumn(1)
+	        sheet.autoSizeColumn(2)
+			sheet.autoSizeColumn(3)
+			sheet.autoSizeColumn(4)
+			sheet.autoSizeColumn(5)
+			sheet.autoSizeColumn(6)
+			sheet.autoSizeColumn(7)
+	        
+	        def fileOut = new FileOutputStream(filePath)
+	        workbook.write(fileOut)
+	        fileOut.close()
+			
+			def state = State.findByKey("outdated")
+			if (state) {
+				state.value = "false"
+			}
+			
+			state = State.findByKey("lastGenerated")
+			if (state) {
+				state.value = filePath
+			}
+			
+			setExportDone(exportJobId, "Success")
+        }
     }
     
     def fixPrice(def price) {

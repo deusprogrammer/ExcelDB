@@ -123,29 +123,24 @@ class ProductController {
     
     def writeOut() {
 		def filePath
-
 		filePath = ExcelService.writeDBToFile()
-		
-		/*
-		def state = State.findByKey("outdated")
-		if (!state || state.value == "false") {
-			state = State.findByKey("lastGenerated")
-			filePath = state?.value
-		} else {
-			
-		}
-		*/
-		
-		if (!filePath) {
-			response.status = 404
-			return
-		}
-		
-        def file = new File(filePath) 
-        response.setHeader("Content-Type", "application/excel") 
-        response.setHeader("Content-Disposition", "attachment; filename=${file.getName()}") 
-        response.setHeader("Content-Length", "${file.size()}") 
-
-        response.outputStream << file.newInputStream()
+		redirect(uri: "/")
     }
+	
+	def download(Long id) {
+		def job = ExportJob.get(id)
+		
+		if (job.done){ 
+			def file = new File(job.filename)
+			response.setHeader("Content-Type", "application/excel")
+			response.setHeader("Content-Disposition", "attachment; filename=${file.getName()}")
+			response.setHeader("Content-Length", "${file.size()}")
+	
+			response.outputStream << file.newInputStream()
+		} else {
+			response.status = 404
+		}
+		
+		return
+	}
 }

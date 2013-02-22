@@ -2,6 +2,7 @@
 <%@ page import="com.trinary.ExcelDB.PendingJob" %>
 <%@ page import="com.trinary.ExcelDB.Product" %>
 <%@ page import="com.trinary.ExcelDB.Manufacturer" %>
+<%@ page import="com.trinary.ExcelDB.ExportJob" %>
 <html>
 	<head>
 		<meta name="layout" content="main"/>
@@ -138,6 +139,13 @@
                           	There are currently <b>${Product.count()}</b> products in the database.<br/>
                             <g:link controller="product" action="list">Product List</g:link><br/>
                             <g:link controller="product" action="writeOut">Request Excel Spreadsheet</g:link><br/>
+                            <div class="sub-item">
+	                            <g:if test="${ExportJob.count() > 0}">
+		                            <g:each in="${ExportJob.list()}" var="ej">
+		                            	<g:render template="/templates/exportJob" model="${[ej:ej]}"/>
+		                            </g:each>
+	                            </g:if>
+                            </div>
                           </div>
                         </g:if>
               

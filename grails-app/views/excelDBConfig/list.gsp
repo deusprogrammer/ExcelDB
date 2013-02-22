@@ -34,7 +34,7 @@
 				<g:each in="${excelDBConfigInstanceList}" status="i" var="excelDBConfigInstance">
 					<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
 					
-						<td><g:link action="show" id="${excelDBConfigInstance.id}">${fieldValue(bean: excelDBConfigInstance, field: "configKey")}</g:link></td>
+						<td><g:link action="edit" id="${excelDBConfigInstance.id}">${fieldValue(bean: excelDBConfigInstance, field: "configKey")}</g:link></td>
 					
 						<td>${fieldValue(bean: excelDBConfigInstance, field: "configValue")}</td>
 					
