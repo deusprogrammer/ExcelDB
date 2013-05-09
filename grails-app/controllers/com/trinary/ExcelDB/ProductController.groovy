@@ -1,7 +1,9 @@
 package com.trinary.ExcelDB
 
 import org.springframework.dao.DataIntegrityViolationException
+import grails.plugins.springsecurity.Secured
 
+@Secured(['ROLE_ADMIN'])
 class ProductController {
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
@@ -142,5 +144,10 @@ class ProductController {
 		}
 		
 		return
+	}
+	
+	def reset() {
+		Product.executeUpdate('delete from Product')
+		redirect(uri: "/")
 	}
 }

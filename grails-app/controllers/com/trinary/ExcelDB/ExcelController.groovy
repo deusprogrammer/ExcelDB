@@ -1,7 +1,9 @@
 package com.trinary.ExcelDB
 
 import com.lucastex.grails.fileuploader.UFile
+import grails.plugins.springsecurity.Secured
 
+@Secured(['ROLE_ADMIN'])
 class ExcelController {
     def index() { }
     

@@ -67,8 +67,8 @@ environments {
             excel.root = "C:/tmp/saved/"
             excel.zip = "C:/tmp/unzipped/"
         } else {
-            excel.root = "/tmp/excelDb/saved/"
-            excel.zip = "/tmp/excelDb/unzipped/"
+            excel.root = "/opt/excelDb/saved/"
+            excel.zip = "/opt/excelDb/unzipped/"
         }
     }
     production {
@@ -76,8 +76,10 @@ environments {
         //grails.serverURL = "http://deusprogrammer.no-ip.org/exceldb"
         if (System.properties['os.name'].toLowerCase().contains('windows')) {
             excel.root = "C:/tmp/saved/"
+			excel.zip = "C:/tmp/unzipped/"
         } else {
-            excel.root = "/tmp/excelDb/saved/"
+            excel.root = "/opt/excelDb/saved/"
+			excel.zip = "/opt/excelDb/unzipped/"
         }
     }
 }
@@ -111,16 +113,20 @@ fileuploader {
                 if (System.properties['os.name'].toLowerCase().contains('windows')) {
                     path = "c:/tmp/zips"
                 } else {
-                    path = "/tmp/excelDb/zips"
+                    path = "/opt/excelDb/zips/"
                 }
 	}
 	excel {
-		maxSize = 1024 * 1024 * 4 //4 mbytes
+		maxSize = 1024 * 1024 * 100 //100MB
 		allowedExtensions = ["xls", "xlsx"]
 		if (System.properties['os.name'].toLowerCase().contains('windows')) {
                     path = "c:/tmp/excel"
                 } else {
-                    path = "/tmp/excelDb/excel"
+					path = "/opt/excelDb/excel/"
                 }
 	}
 }
+// Added by the Spring Security Core plugin:
+grails.plugins.springsecurity.userLookup.userDomainClassName = 'com.trinary.ExcelDB.User'
+grails.plugins.springsecurity.userLookup.authorityJoinClassName = 'com.trinary.ExcelDB.UserRole'
+grails.plugins.springsecurity.authority.className = 'com.trinary.ExcelDB.Role'

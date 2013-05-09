@@ -1,5 +1,8 @@
 package com.trinary.ExcelDB
 
+import grails.plugins.springsecurity.Secured
+
+@Secured(['ROLE_ADMIN'])
 class PendingJobController {
 
     def index() { }
@@ -7,14 +10,6 @@ class PendingJobController {
     def list() {
         params.max = Math.min(params.max ? params.int('max') : 10, 100)
         [failedJobInstanceList: PendingJob.list(params), failedJobInstanceTotal: PendingJob.count()]
-    }
-    
-    def populate() {
-        new PendingJob(fileLocation: "C:\\ftest\\test1.xlsx").save(flush: true)
-        new PendingJob(fileLocation: "C:\\ftest\\test2.xls").save(flush: true)
-        new PendingJob(fileLocation: "C:\\ftest\\test3.xls").save(flush: true)
-        
-        render "OK"
     }
     
     def pop() {

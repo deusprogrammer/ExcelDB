@@ -3,7 +3,9 @@ package com.trinary.ExcelDB
 import com.lucastex.grails.fileuploader.UFile
 import net.lingala.zip4j.core.ZipFile
 import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
+import grails.plugins.springsecurity.Secured
 
+@Secured(['ROLE_ADMIN'])
 class ZipController {
     def ExcelService
     

@@ -1,5 +1,5 @@
 <%@ page import="com.trinary.ExcelDB.User" %>
-<!doctype html>
+<!DOCTYPE html>
 <html>
 	<head>
 		<meta name="layout" content="main">

@@ -6,7 +6,9 @@ import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import grails.plugins.springsecurity.Secured
 
+@Secured(['ROLE_ADMIN'])
 class ExcelMappingController {
     def ExcelService
 
@@ -73,14 +75,16 @@ class ExcelMappingController {
                 if (dataStartIndex == -1) {
                     dataStartIndex = i
                     //println "Data starts at line ${dataStartIndex}"
+					break
                 }
             }
         }
 
         def rowNumber = 0
         def width = 0
+		
         //Add excel file to database
-        for (def i = 0; i < sheet.getLastRowNum(); i++) {
+        for (def i = 0; i < sheet.getLastRowNum() && rowNumber < 100; i++) {
             Row row
             def rowIsLabel = false
             def cellCount

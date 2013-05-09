@@ -281,15 +281,15 @@ class ExcelService {
 	        row.createCell(1).setCellValue("PART_NAME")
 			row.createCell(2).setCellValue("PRICE")
 	        row.createCell(3).setCellValue("UNIT_OF_ISSUE")
-			row.createCell(4).setCellValue("ITEMS_PER_UNIT")
+			row.createCell(4).setCellValue("ITEMS_PER_UOI")
 			row.createCell(5).setCellValue("OEM_NAME")
 			row.createCell(6).setCellValue("OEM_PART_NO")
 			row.createCell(7).setCellValue("DESCRIPTION")
+			row.createCell(8).setCellValue("DAYS ARO")
 	        
 			try {
 		        products.eachWithIndex { product, i ->
 		            row = sheet.createRow(i + 1)
-					//println "ROW: ${i + 1}"
 		            def productNumber = product.productVendor + "-" + product.productNumber
 					def productManufacturer = Manufacturer.findByManufacturerCode(product.productVendor)
 		            def productPrice = (product.productPrice.toString().toDouble() * (1.0 + markup)).round(2)
@@ -302,6 +302,7 @@ class ExcelService {
 					row.createCell(5).setCellValue(productManufacturer.manufacturerName)
 					row.createCell(6).setCellValue(product.productNumber)
 					row.createCell(7).setCellValue(productManufacturer.manufacturerName + "- " + product.productDescription)
+					row.createCell(8).setCellValue("14")
 					incrementExportStep(exportJobId)
 		        }
 			} catch (Exception e) {
@@ -316,6 +317,7 @@ class ExcelService {
 			sheet.autoSizeColumn(5)
 			sheet.autoSizeColumn(6)
 			sheet.autoSizeColumn(7)
+			sheet.autoSizeColumn(8)
 	        
 	        def fileOut = new FileOutputStream(filePath)
 	        workbook.write(fileOut)
