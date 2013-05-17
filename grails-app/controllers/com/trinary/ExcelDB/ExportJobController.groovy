@@ -101,4 +101,23 @@ class ExportJobController {
             redirect(action: "show", id: id)
         }
     }
+	
+	def progress() {
+		def jobs = request.JSON.jobs
+		List<ExcelJob> jobList
+		def progress = [:]
+		
+		if (jobs && jobs instanceof List) {
+			jobList = ExportJob.getAll(jobs)
+		}
+			
+		jobList.each {
+			if (it) {
+				def p = (((double)it.step / (double)it.steps) * 100).round(2)
+				progress["${it.id}"] = p
+			}
+		}
+		
+		render progress
+	}
 }

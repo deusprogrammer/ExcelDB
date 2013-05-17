@@ -24,7 +24,7 @@
 				<g:link controller='login' action='auth'>Login</g:link>
 			</sec:ifNotLoggedIn>
 			<sec:ifLoggedIn>
-				Welcome back <sec:username/>!  <g:link controller='logout' action='auth'>Logout?</g:link>
+				Welcome back <sec:username/>!  <g:link controller='logout' action='index'>Logout?</g:link>
 			</sec:ifLoggedIn>
 		</div>
 		<g:layoutBody/>

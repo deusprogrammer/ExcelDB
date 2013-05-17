@@ -16,6 +16,7 @@ import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
 
 class ExcelService {
     //DB Helper functions
+	protected Object lock
 	
 	def setExportDone(def jobId, def message) {
 		def job = ExportJob.get(jobId)
@@ -35,13 +36,17 @@ class ExcelService {
 	def incrementExportStep(def jobId) {
 		def job = ExportJob.get(jobId)
 		
-		if (job) {
-			synchronized(job) {
-				job.lock()
-				job.step++
-
-				job.save(flush: true)
+		try {
+			if (job) {
+				synchronized(job) {
+					job.lock()
+					job.step++
+	
+					job.save(flush: true)
+				}
 			}
+		} catch (Exception e) {
+			println "FAILED TO INCREMENT STEP!"
 		}
 	}
     
@@ -63,14 +68,18 @@ class ExcelService {
     def incrementStep(def jobId) {
         def job = ExcelJob.get(jobId)
         
-        if (job) {
-            synchronized(job) {
-                job.lock()
-                job.step++
-
-                job.save(flush: true)
-            }
-        }        
+		try {
+	        if (job) {
+	            synchronized(job) {
+	                job.lock()
+	                job.step++
+	
+	                job.save(flush: true)
+	            }
+	        }
+		} catch (Exception e) {
+			println "FAILED TO INCREMENT STEP!"
+		}    
     }
     
     def setSteps(def jobId, def nSteps) {
@@ -125,128 +134,134 @@ class ExcelService {
 		}
 
         runAsync {
-            Product p
-
-            println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
-
-            def columnVotes = [productNumber: -1, productDescription: -1, productPrice: -1]
-            def columnLabels = [productNumber: "", productDescription: "", productPrice: ""]
-            def labelFound = false
-            def sheetFound = false
-            def dataStartIndex = -1
-			
-			if (columnMappings["productName"] == null) {
-				columnVotes["productName"] = columnMappings["productNumber"]
-			} else {
-				columnVotes["productName"] = columnMappings["productName"]
-			}
-			
-			if (columnMappings["productNumber"] == null || columnMappings["productDescription"] == null || columnMappings["productPrice"] == null) {
-				println "COLUMNS ARE"
-				println "\tProduct Number:      "  + columnMappings["productNumber"]
-				println "\tProduct Name:        "  + columnMappings["productName"]
-				println "\tProduct Description: "  + columnMappings["productDescription"]
-				println "\tProduct Price:       "  + columnMappings["productPrice"]
-				println "FAILED!"
-				setDone(jobId, "Failure")
-				return
-			}
-			
-
-            columnVotes["productNumber"] = columnMappings["productNumber"]
-            columnVotes["productDescription"] = columnMappings["productDescription"]
-            columnVotes["productPrice"] = columnMappings["productPrice"]
-            sheetNumber = Integer.parseInt(columnMappings["sheet"])
-            dataStartIndex = Integer.parseInt(columnMappings["row"])
-
-            println "COLUMNS ARE"
-            println "\tProduct Number:      "  + columnVotes["productNumber"]
-			println "\tProduct Name:        "  + columnVotes["productName"]
-            println "\tProduct Description: "  + columnVotes["productDescription"]
-            println "\tProduct Price:       "  + columnVotes["productPrice"]
-
-            sheet = workbook.getSheetAt(sheetNumber)
-            setSteps(jobId, sheet.getLastRowNum())
-            
-            println "SHEET:      ${sheetNumber}"
-            println "DATA START: ${dataStartIndex}"
-			
-			def state = State.findByKey("outdated")
-			
-			if (state) {
-				state.value = "true"
-			}
-
-            //Add excel file to database
-            for (def i = dataStartIndex; i < sheet.getLastRowNum(); i++) {
-                Row row
-                def rowIsLabel = false
-                def cellCount
-                def emptyCount = 0
-
-                try {
-                    row = sheet.getRow(i)
-                    cellCount = row.getLastCellNum()
-                }
-                catch (Exception e) {
-                    println "Row is non existent..."
-                    continue
-                }
-
-                //Check each cell to determine if the row is empty (mostly)
-                for (def j = 0; j < row.getLastCellNum(); j++) {
-                    Cell cell = row.getCell(j)
-                    try {
-                        switch (cell.getCellType()) {
-                            case Cell.CELL_TYPE_BLANK:
-                                emptyCount++
-                                break
-                            default:
-                                break
-                        }
-                    }
-                    catch (Exception e) {
-                        emptyCount++
-                    }
-                }
-
-                if ((cellCount - emptyCount) >= 3) {
-                    String productNumber = row.getCell(columnVotes["productNumber"]).toString()
-                    println "ROW: ${i}"
-                    println "ADDING PRODUCT NUMBER ${productNumber}"
-					
-					def productPrice       = row.getCell(columnVotes["productPrice"]).toString().replace('$', '')
-					def productName        = row.getCell(columnVotes["productName"]).toString()
-					def productDescription = row.getCell(columnVotes["productDescription"]).toString()
-					
-					if (!productNumber || productNumber == "" || !productDescription || productDescription == "" || !productPrice || productPrice == "" || !productPrice.isNumber()) {
-						continue	
-					}
-
-					try {
-						p = Product.findByProductNumberAndProductVendor(productNumber, manu)
+			try {
+	            Product p
+	
+	            println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
+	
+	            def columnVotes = [productNumber: -1, productDescription: -1, productPrice: -1]
+	            def columnLabels = [productNumber: "", productDescription: "", productPrice: ""]
+	            def labelFound = false
+	            def sheetFound = false
+	            def dataStartIndex = -1
+				
+				if (columnMappings["productName"] == null) {
+					columnVotes["productName"] = columnMappings["productNumber"]
+				} else {
+					columnVotes["productName"] = columnMappings["productName"]
+				}
+				
+				if (columnMappings["productNumber"] == null || columnMappings["productDescription"] == null || columnMappings["productPrice"] == null || columnMappings["row"] == null || columnMappings["sheet"] == null) {
+					println "COLUMNS ARE"
+					println "\tProduct Number:      "  + columnMappings["productNumber"]
+					println "\tProduct Name:        "  + columnMappings["productName"]
+					println "\tProduct Description: "  + columnMappings["productDescription"]
+					println "\tProduct Price:       "  + columnMappings["productPrice"]
+					println "FAILED!"
+					setDone(jobId, "Failure")
+					return
+				}
+				
+	
+	            columnVotes["productNumber"] = columnMappings["productNumber"]
+	            columnVotes["productDescription"] = columnMappings["productDescription"]
+	            columnVotes["productPrice"] = columnMappings["productPrice"]
+	            sheetNumber = Integer.parseInt(columnMappings["sheet"])
+	            dataStartIndex = Integer.parseInt(columnMappings["row"])
+	
+	            println "COLUMNS ARE"
+	            println "\tProduct Number:      "  + columnVotes["productNumber"]
+				println "\tProduct Name:        "  + columnVotes["productName"]
+	            println "\tProduct Description: "  + columnVotes["productDescription"]
+	            println "\tProduct Price:       "  + columnVotes["productPrice"]
+	
+	            sheet = workbook.getSheetAt(sheetNumber)
+	            setSteps(jobId, sheet.getLastRowNum())
+	            
+	            println "SHEET:      ${sheetNumber}"
+	            println "DATA START: ${dataStartIndex}"
+				
+				def state = State.findByKey("outdated")
+				
+				if (state) {
+					state.value = "true"
+				}
+	
+	            //Add excel file to database
+	            for (def i = dataStartIndex; i < sheet.getLastRowNum(); i++) {
+	                Row row
+	                def rowIsLabel = false
+	                def cellCount
+	                def emptyCount = 0
+	
+	                try {
+	                    row = sheet.getRow(i)
+	                    cellCount = row.getLastCellNum()
+	                }
+	                catch (Exception e) {
+	                    println "Row is non existent..."
+	                    continue
+	                }
+	
+	                //Check each cell to determine if the row is empty (mostly)
+	                for (def j = 0; j < row.getLastCellNum(); j++) {
+	                    Cell cell = row.getCell(j)
+	                    try {
+	                        switch (cell.getCellType()) {
+	                            case Cell.CELL_TYPE_BLANK:
+	                                emptyCount++
+	                                break
+	                            default:
+	                                break
+	                        }
+	                    }
+	                    catch (Exception e) {
+	                        emptyCount++
+	                    }
+	                }
+	
+	                if ((cellCount - emptyCount) >= 3) {
+	                    String productNumber = row.getCell(columnVotes["productNumber"]).toString()
+	                    println "ROW: ${i}"
+	                    println "ADDING PRODUCT NUMBER ${productNumber}"
 						
-						if (!p) {
-							println "Unable to find existing product.  Adding new one."
-							p = new Product()
-						} 
+						def productPrice       = row.getCell(columnVotes["productPrice"]).toString().replace('$', '')
+						def productName        = row.getCell(columnVotes["productName"]).toString()
+						def productDescription = row.getCell(columnVotes["productDescription"]).toString()
 						
-						p.productNumber = productNumber
-						p.productPrice = fixPrice(productPrice)
-						p.productName  = productName
-						p.productDescription = productDescription
-						p.productVendor = manu
-						
-	                    p.save(flush: true)
-					} catch (Exception e) {
-						println "EXCEPTION: " + e.getMessage()
-					}
-                }
-
-                incrementStep(jobId)
-            }
-            incrementStep(jobId)
-            setDone(jobId, "Success")
+						if (!productNumber || productNumber == "" || !productDescription || productDescription == "" || !productPrice || productPrice == "" || !productPrice.isNumber()) {
+							continue	
+						}
+	
+						try {
+							synchronized (lock) {
+								p = Product.findByProductNumberAndProductVendor(productNumber, manu)
+								
+								if (!p) {
+									println "Unable to find existing product.  Adding new one."
+									p = new Product()
+								} 
+								
+								p.productNumber = productNumber
+								p.productPrice = fixPrice(productPrice)
+								p.productName  = productName
+								p.productDescription = productDescription
+								p.productVendor = manu
+								
+			                    p.save(flush: true)
+							}
+						} catch (Exception e) {
+							println "EXCEPTION: " + e.getMessage()
+						}
+	                }
+	
+	                incrementStep(jobId)
+	            }
+	            incrementStep(jobId)
+	            setDone(jobId, "Success")
+			} catch (Exception e) {
+				println "EXCEPTION: ${e.getMessage()}"
+			}
         }
         
         return jobId
@@ -322,16 +337,6 @@ class ExcelService {
 	        def fileOut = new FileOutputStream(filePath)
 	        workbook.write(fileOut)
 	        fileOut.close()
-			
-			def state = State.findByKey("outdated")
-			if (state) {
-				state.value = "false"
-			}
-			
-			state = State.findByKey("lastGenerated")
-			if (state) {
-				state.value = filePath
-			}
 			
 			setExportDone(exportJobId, "Success")
         }

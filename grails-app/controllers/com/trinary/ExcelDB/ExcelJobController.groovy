@@ -102,4 +102,23 @@ class ExcelJobController {
             redirect(action: "show", id: params.id)
         }
     }
+	
+	def progress() {
+		def jobs = request.JSON.jobs
+		List<ExcelJob> jobList
+		def progress = [:]
+		
+		if (jobs && jobs instanceof List) {
+			jobList = ExcelJob.getAll(jobs)
+		}
+			
+		jobList.each {
+			if (it) {
+				def p = (((double)it.step / (double)it.nSteps) * 100).round(2)
+				progress["${it.id}"] = p
+			}
+		}
+		
+		render progress
+	}
 }

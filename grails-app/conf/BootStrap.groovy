@@ -5,6 +5,7 @@ import com.trinary.ExcelDB.Role
 import com.trinary.ExcelDB.UserRole
 
 class BootStrap {
+	def executorService
 
     def init = { servletContext ->
         if (!ExcelDBConfig.findByConfigKey("markupPercentage")) {
@@ -27,7 +28,10 @@ class BootStrap {
             adminUser = new User(username: "admin", password: "password", enabled: "true").save()
         }
 		
-		UserRole.create adminUser, adminRole, true
+		try {
+			UserRole.create adminUser, adminRole, true
+		} catch (Exception e) {
+		}
     }
     def destroy = {
     }

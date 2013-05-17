@@ -143,6 +143,10 @@
                         <g:link controller="product" action="writeOut">Request Excel Spreadsheet</g:link><br/>
                         <div class="sub-item">
                         	<g:if test="${ExportJob.count() > 0}">
+                        		<%
+									def ejList = ExportJob.list(max: 3, sort: 'dateCreated', order: 'desc')
+									def ejId = ejList*.id
+								%>
 	                            <g:each in="${ExportJob.list(max: 3, sort: 'dateCreated', order: 'desc')}" var="ej">
 	                            	<g:render template="/templates/exportJob" model="${[ej:ej]}"/>
 	                            </g:each>
