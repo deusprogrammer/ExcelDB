@@ -30,7 +30,7 @@
 
                                 <g:sortableColumn property="productPrice" title="${message(code: 'product.productPrice.label', default: 'Product Price')}" />
 
-                                <g:sortableColumn property="productVendor" title="${message(code: 'product.productVendor.label', default: 'Product Vendor')}" />
+                                <g:sortableColumn property="productVendor" title="Product Vendor" />
 
                               </tr>
                             </thead>
@@ -44,7 +44,7 @@
 
                                                   <td>${fieldValue(bean: productInstance, field: "productPrice")}</td>
 
-                                                  <td>${fieldValue(bean: productInstance, field: "productVendor")}</td>
+                                                  <td>${productInstance.manufacturer.manufacturerName}</td>
 
                                           </tr>
                                   </g:each>

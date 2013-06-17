@@ -26,11 +26,3 @@
 	<g:textField name="productPrice" value="${productInstance?.productPrice}"/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: productInstance, field: 'productVendor', 'error')} ">
-	<label for="productVendor">
-		<g:message code="product.productVendor.label" default="Product Vendor" />
-		
-	</label>
-	<g:textField name="productVendor" value="${productInstance?.productVendor}"/>
-</div>
-

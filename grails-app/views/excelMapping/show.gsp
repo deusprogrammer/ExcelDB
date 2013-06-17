@@ -30,7 +30,7 @@
                 <%def j=0%>
                 <th>Starting Row</th>
                 <g:while test="${j < width}">
-                  <th><g:select from="${["None", "Product Name", "Product Price", "Product Number", "Product Description"]}" name="colhead" /></th>
+                  <th><g:select from="${["None", "Product Name", "Product Price", "Product Number", "Product Description", "Product Manufacturer"]}" name="colhead" /></th>
                   <%j++%>
                 </g:while>
               </tr>

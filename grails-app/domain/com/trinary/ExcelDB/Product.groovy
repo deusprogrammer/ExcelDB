@@ -2,34 +2,30 @@ package com.trinary.ExcelDB
 
 class Product {
     String productNumber
+	String oemProductNumber
 	String productName
     String productDescription
-    String productVendor
     String productPrice
+	
+	static def belongsTo = [manufacturer: Manufacturer]
     
     Product() {
         //println "New Product being added!"
-        productVendor = "Default"
     }
     
-    def afterSave() {
-        //println "PRODUCT SAVED: "
-        //println "\tnumber:      " + productNumber
-        //println "\tdescription: " + productDescription
-        //println "\tvendor:      " + productVendor
-        //println "\tprice:       " + productPrice
+    def beforeSave() {
     }
     
-    def afterInsert() {
-        afterSave()
+    def beforeInsert() {
+        beforeSave()
     }
     
-    def afterUpdate() {
-        afterSave()
+    def beforeUpdate() {
+        beforeSave()
     }
 
     static constraints = {
-        productNumber unique: true
+        productNumber nullable: true
     }
     
     static mapping = {

@@ -167,6 +167,9 @@ class ExcelMappingController {
             case "Product Number":
                 columnMappings["productNumber"] = i
                 break
+			case "Product Manufacturer":
+				columnMappings["productManufacturer"] = i
+				break
             }
         }
         

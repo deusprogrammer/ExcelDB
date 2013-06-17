@@ -16,7 +16,7 @@ import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
 
 class ExcelService {
     //DB Helper functions
-	protected Object lock
+	protected Object lock = new Object()
 	
 	def setExportDone(def jobId, def message) {
 		def job = ExportJob.get(jobId)
@@ -110,9 +110,7 @@ class ExcelService {
 		def manu
 		
 		try {
-	        manu = getManufacturer(fileLocation)
 	        workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
-	        
 		} catch (Exception e) {
 			println "EXCEPTION: ${e.getMessage()}"
 			job.status = "Failed"
@@ -123,23 +121,18 @@ class ExcelService {
 		}
 
         def sheetNumber = 0
-        
-        println "MANUFACTURER: ${manu}"
-		
-		def manufacturer = Manufacturer.findByManufacturerCode(manu)
-		
-		if (!manufacturer) {
-			manufacturer = new Manufacturer(manufacturerCode: manu)
-			manufacturer.save()
-		}
 
         runAsync {
 			try {
+				manu = getManufacturer(fileLocation)
+				println "MANUFACTURER: ${manu}"
+				
 	            Product p
 	
 	            println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
 	
-	            def columnVotes = [productNumber: -1, productDescription: -1, productPrice: -1]
+				def manufacturer
+	            def columnVotes = [productNumber: -1, productDescription: -1, productPrice: -1, productManufacturer: -1]
 	            def columnLabels = [productNumber: "", productDescription: "", productPrice: ""]
 	            def labelFound = false
 	            def sheetFound = false
@@ -149,6 +142,10 @@ class ExcelService {
 					columnVotes["productName"] = columnMappings["productNumber"]
 				} else {
 					columnVotes["productName"] = columnMappings["productName"]
+				}
+				
+				if (columnMappings["productManufacturer"] != null) {
+					columnVotes["productManufacturer"] = columnMappings["productManufacturer"]
 				}
 				
 				if (columnMappings["productNumber"] == null || columnMappings["productDescription"] == null || columnMappings["productPrice"] == null || columnMappings["row"] == null || columnMappings["sheet"] == null) {
@@ -180,11 +177,14 @@ class ExcelService {
 	            
 	            println "SHEET:      ${sheetNumber}"
 	            println "DATA START: ${dataStartIndex}"
-				
-				def state = State.findByKey("outdated")
-				
-				if (state) {
-					state.value = "true"
+								
+				if (columnVotes["productManufacturer"] == -1) {
+					manufacturer = Manufacturer.findByManufacturerCode(manu)
+					
+					if (!manufacturer) {
+						manufacturer = new Manufacturer(manufacturerCode: manu)
+						manufacturer.save()
+					}
 				}
 	
 	            //Add excel file to database
@@ -228,6 +228,7 @@ class ExcelService {
 						def productPrice       = row.getCell(columnVotes["productPrice"]).toString().replace('$', '')
 						def productName        = row.getCell(columnVotes["productName"]).toString()
 						def productDescription = row.getCell(columnVotes["productDescription"]).toString()
+						def productManufacturer
 						
 						if (!productNumber || productNumber == "" || !productDescription || productDescription == "" || !productPrice || productPrice == "" || !productPrice.isNumber()) {
 							continue	
@@ -235,20 +236,74 @@ class ExcelService {
 	
 						try {
 							synchronized (lock) {
-								p = Product.findByProductNumberAndProductVendor(productNumber, manu)
+								p = Product.findByOemProductNumber(productNumber)
+								Manufacturer m
 								
 								if (!p) {
 									println "Unable to find existing product.  Adding new one."
 									p = new Product()
 								} 
 								
-								p.productNumber = productNumber
+								p.oemProductNumber = productNumber
 								p.productPrice = fixPrice(productPrice)
 								p.productName  = productName
 								p.productDescription = productDescription
-								p.productVendor = manu
 								
-			                    p.save(flush: true)
+								if (columnVotes["productManufacturer"] == -1) {
+									println "No column mapping for manufacturer.  Using ${manufacturer.manufacturerCode}"
+									
+									m = manufacturer
+								} else {
+									productManufacturer = row.getCell(columnMappings["productManufacturer"]).toString()
+									def newManufacturer = Manufacturer.findByManufacturerName(productManufacturer)
+									
+									if (!newManufacturer) {
+										println "Creating new manufacturer ${productManufacturer}"
+										def found = false
+										def abrev = productManufacturer.replaceAll(" ", "")[0..2].toUpperCase()
+										def tmp = abrev
+										def index = 1
+										while (Manufacturer.findByManufacturerCode(tmp)) {
+											tmp = "${abrev}${index++}"
+										}
+										abrev = tmp
+										newManufacturer = new Manufacturer(manufacturerName: productManufacturer, manufacturerCode: abrev)
+										newManufacturer.save(flush: true)
+									}
+									
+									m = newManufacturer
+								}
+								
+								p.manufacturer = m
+								
+			                    if (!p.save(flush: true)) {
+									println "ERRORS:"
+									p.errors.each {
+										println "\t${it}"
+									}
+								}
+								
+								m.addToProducts(p)
+								m.save(flush: true)
+								
+								//Create product number
+								def itemNumber = String.format('%010d', m.products.size())
+								def abrev = "UNK"
+								
+								if (m.manufacturerCode) {
+									abrev = m.manufacturerCode
+								} else if (m.manufacturerName && m.manufacturerName.length() >= 3) {
+									abrev = m.manufacturerName[0..2].toUpperCase()
+								}
+								
+								p.productNumber = "${abrev}-${itemNumber}"
+								
+								if (!p.save(flush: true)) {
+									println "ERRORS:"
+									p.errors.each {
+										println "\t${it}"
+									}
+								}
 							}
 						} catch (Exception e) {
 							println "EXCEPTION: " + e.getMessage()
@@ -305,23 +360,25 @@ class ExcelService {
 			try {
 		        products.eachWithIndex { product, i ->
 		            row = sheet.createRow(i + 1)
-		            def productNumber = product.productVendor + "-" + product.productNumber
-					def productManufacturer = Manufacturer.findByManufacturerCode(product.productVendor)
+		            def productNumber = product.productNumber
+					def productManufacturer = product.manufacturer.manufacturerName
 		            def productPrice = (product.productPrice.toString().toDouble() * (1.0 + markup)).round(2)
+					
+					println "WRITING PRODUCT: ${product.productNumber} (${product.oemProductNumber})"
 		
 					row.createCell(0).setCellValue(productNumber)
 					row.createCell(1).setCellValue(product.productName)
 		            row.createCell(2).setCellValue("\$" + productPrice)
 					row.createCell(3).setCellValue("EA")
 					row.createCell(4).setCellValue("1")
-					row.createCell(5).setCellValue(productManufacturer.manufacturerName)
-					row.createCell(6).setCellValue(product.productNumber)
-					row.createCell(7).setCellValue(productManufacturer.manufacturerName + "- " + product.productDescription)
+					row.createCell(5).setCellValue(productManufacturer)
+					row.createCell(6).setCellValue(product.oemProductNumber)
+					row.createCell(7).setCellValue(productManufacturer + "- " + product.productDescription)
 					row.createCell(8).setCellValue("14")
 					incrementExportStep(exportJobId)
 		        }
 			} catch (Exception e) {
-				println "EXCEPTION: " + e.getMessage()
+				println "EXCEPTION: ${e.getMessage()}"
 			}
 	        
 	        sheet.autoSizeColumn(0)
