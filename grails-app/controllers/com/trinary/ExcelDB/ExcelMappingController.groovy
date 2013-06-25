@@ -15,22 +15,22 @@ class ExcelMappingController {
     def show() {
         def sheetNumber = 0
         def sheetName = ""
-        
+
         if (!params["file"]) {
             return []
         }
         if (params["sheet"]) {
             sheetNumber = Integer.parseInt(params["sheet"])
         }
-        
+
         def fileLocation = params["file"]
         def table = []
-                
+
         //println "PROCESSING: ${fileLocation}\nJOBID: ${job.id}"
         Workbook workbook = WorkbookFactory.create(new FileInputStream(fileLocation))
         Sheet sheet = workbook.getSheetAt(sheetNumber)
         sheetName = workbook.getSheetName(sheetNumber)
-        
+
         def nSheets = workbook.getNumberOfSheets()
 
         def columnLabels = [productNumber: "", productDescription: "", productPrice: ""]
@@ -43,7 +43,7 @@ class ExcelMappingController {
             def rowIsLabel = false
             def cellCount = 0
             def emptyCount = 0
-                    
+
             try {
                 row = sheet.getRow(i)
                 cellCount = row.getLastCellNum()
@@ -75,21 +75,21 @@ class ExcelMappingController {
                 if (dataStartIndex == -1) {
                     dataStartIndex = i
                     //println "Data starts at line ${dataStartIndex}"
-					break
+                    break
                 }
             }
         }
 
         def rowNumber = 0
         def width = 0
-		
+
         //Add excel file to database
         for (def i = 0; i < sheet.getLastRowNum() && rowNumber < 100; i++) {
             Row row
             def rowIsLabel = false
             def cellCount
             def emptyCount = 0
-                    
+
             try {
                 row = sheet.getRow(i)
                 cellCount = row.getLastCellNum()
@@ -104,7 +104,7 @@ class ExcelMappingController {
                 Cell cell = row.getCell(j)
                 def cellString = cell.toString()
 
-                
+
                 try {
                     switch (cell.getCellType()) {
                     case Cell.CELL_TYPE_STRING:
@@ -133,7 +133,7 @@ class ExcelMappingController {
                 table[rowNumber++] = [cells: cells, rowNumber: i]
                 //println "TABLE: ${table}"
             }
-            
+
             if (thisWidth > width) {
                 width = thisWidth
             }
@@ -141,16 +141,16 @@ class ExcelMappingController {
 
         //println "WIDTH: ${width}"
         //println "TABLE: ${table}"
-        
+
         [table: table, width: width, file: fileLocation, sheet: sheetNumber, nSheets: nSheets, sheetName: sheetName]
     }
-    
+
     def map() {
         def columnMappings = [:]
         def fileLocation = params["fileLocation"]
         def sheet = params["sheet"]
         def row = params["radioGroup"]
-        
+
         params["colhead"].eachWithIndex { columnLabel, i ->
             switch (columnLabel) {
             case "None":
@@ -158,26 +158,26 @@ class ExcelMappingController {
             case "Product Price":
                 columnMappings["productPrice"] = i
                 break
-			case "Product Name":
-				columnMappings["productName"] = i
-				break
+            case "Product Name":
+                columnMappings["productName"] = i
+                break
             case "Product Description":
                 columnMappings["productDescription"] = i
                 break
             case "Product Number":
                 columnMappings["productNumber"] = i
                 break
-			case "Product Manufacturer":
-				columnMappings["productManufacturer"] = i
-				break
+            case "Product Manufacturer":
+                columnMappings["productManufacturer"] = i
+                break
             }
         }
-        
+
         columnMappings["sheet"] = sheet
         columnMappings["row"] = row
-        
+
         ExcelService.processExcelFiles(fileLocation, columnMappings)
-        
+
         redirect(controller: "pendingJob", action: "pop")
     }
 }

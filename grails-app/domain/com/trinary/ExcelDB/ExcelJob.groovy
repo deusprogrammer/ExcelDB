@@ -6,7 +6,7 @@ class ExcelJob {
     Boolean done
     Integer step
     Integer nSteps
-    
+
     ExcelJob() {
         println "Creating new job..."
         done = false

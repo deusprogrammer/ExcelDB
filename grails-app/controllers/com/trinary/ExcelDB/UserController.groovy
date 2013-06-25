@@ -23,23 +23,23 @@ class UserController {
 
     def save() {
         def userInstance = new User(params)
-		
-		def roles = params.roles
-				
+
+        def roles = params.roles
+
         if (!userInstance.save(flush: true)) {
             render(view: "create", model: [userInstance: userInstance])
             return
         }
-		
-		roles.each { key, role ->
-			if (role) {
-				println "ROLE: ${key} -> ${role}"
-				try {
-					UserRole.create userInstance, Role.findByAuthority(key), true
-				} catch (Exception e) {
-				}
-			}
-		}
+
+        roles.each { key, role ->
+            if (role) {
+                println "ROLE: ${key} -> ${role}"
+                try {
+                    UserRole.create userInstance, Role.findByAuthority(key), true
+                } catch (Exception e) {
+                }
+            }
+        }
 
         flash.message = message(code: 'default.created.message', args: [message(code: 'user.label', default: 'User'), userInstance.id])
         redirect(action: "show", id: userInstance.id)
@@ -74,18 +74,18 @@ class UserController {
             redirect(action: "list")
             return
         }
-		
-		def roles = params.roles
-		
-		roles.each { key, role ->
-			if (role) {
-				println "ROLE: ${key} -> ${role}"
-				try {
-					UserRole.create userInstance, Role.findByAuthority(key), true
-				} catch (Exception e) {
-				}
-			}
-		}
+
+        def roles = params.roles
+
+        roles.each { key, role ->
+            if (role) {
+                println "ROLE: ${key} -> ${role}"
+                try {
+                    UserRole.create userInstance, Role.findByAuthority(key), true
+                } catch (Exception e) {
+                }
+            }
+        }
 
         if (version != null) {
             if (userInstance.version > version) {

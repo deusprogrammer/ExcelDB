@@ -76,10 +76,10 @@ environments {
         //grails.serverURL = "http://deusprogrammer.no-ip.org/exceldb"
         if (System.properties['os.name'].toLowerCase().contains('windows')) {
             excel.root = "C:/tmp/saved/"
-			excel.zip = "C:/tmp/unzipped/"
+            excel.zip = "C:/tmp/unzipped/"
         } else {
             excel.root = "/opt/excelDb/saved/"
-			excel.zip = "/opt/excelDb/unzipped/"
+            excel.zip = "/opt/excelDb/unzipped/"
         }
     }
 }
@@ -107,24 +107,24 @@ log4j = {
 }
 
 fileuploader {
-	zip {
-		maxSize = 1024 * 1024 * 100 //100MB
-		allowedExtensions = ["zip"]
+    zip {
+        maxSize = 1024 * 1024 * 100 //100MB
+        allowedExtensions = ["zip"]
                 if (System.properties['os.name'].toLowerCase().contains('windows')) {
                     path = "c:/tmp/zips"
                 } else {
                     path = "/opt/excelDb/zips/"
                 }
-	}
-	excel {
-		maxSize = 1024 * 1024 * 100 //100MB
-		allowedExtensions = ["xls", "xlsx"]
-		if (System.properties['os.name'].toLowerCase().contains('windows')) {
+    }
+    excel {
+        maxSize = 1024 * 1024 * 100 //100MB
+        allowedExtensions = ["xls", "xlsx"]
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
                     path = "c:/tmp/excel"
                 } else {
-					path = "/opt/excelDb/excel/"
+                    path = "/opt/excelDb/excel/"
                 }
-	}
+    }
 }
 // Added by the Spring Security Core plugin:
 grails.plugins.springsecurity.userLookup.userDomainClassName = 'com.trinary.ExcelDB.User'

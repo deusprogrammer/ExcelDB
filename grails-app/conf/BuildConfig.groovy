@@ -40,11 +40,11 @@ grails.project.dependency.resolution = {
         runtime ":hibernate:$grailsVersion"
         runtime ":jquery:1.7.1"
         runtime ":resources:1.1.6"
-		
-		compile ":file-uploader:1.2.1"
-		compile ":executor:0.3"
-		
-		compile ":spring-security-core:1.2.7.3"
+
+        compile ":file-uploader:1.2.1"
+        compile ":executor:0.3"
+
+        compile ":spring-security-core:1.2.7.3"
 
         // Uncomment these (or add new ones) to enable additional resources capabilities
         //runtime ":zipped-resources:1.0"

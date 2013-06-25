@@ -28,14 +28,14 @@ class ExcelJobController {
             return
         }
 
-		flash.message = message(code: 'default.created.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), excelJobInstance.id])
+        flash.message = message(code: 'default.created.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), excelJobInstance.id])
         redirect(action: "show", id: excelJobInstance.id)
     }
 
     def show() {
         def excelJobInstance = ExcelJob.get(params.id)
         if (!excelJobInstance) {
-			flash.message = message(code: 'default.not.found.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), params.id])
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), params.id])
             redirect(action: "list")
             return
         }
@@ -80,45 +80,45 @@ class ExcelJobController {
             return
         }
 
-		flash.message = message(code: 'default.updated.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), excelJobInstance.id])
+        flash.message = message(code: 'default.updated.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), excelJobInstance.id])
         redirect(action: "show", id: excelJobInstance.id)
     }
 
     def delete() {
         def excelJobInstance = ExcelJob.get(params.id)
         if (!excelJobInstance) {
-			flash.message = message(code: 'default.not.found.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), params.id])
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), params.id])
             redirect(action: "list")
             return
         }
 
         try {
             excelJobInstance.delete(flush: true)
-			flash.message = message(code: 'default.deleted.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), params.id])
+            flash.message = message(code: 'default.deleted.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), params.id])
             redirect(action: "list")
         }
         catch (DataIntegrityViolationException e) {
-			flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), params.id])
+            flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'excelJob.label', default: 'ExcelJob'), params.id])
             redirect(action: "show", id: params.id)
         }
     }
-	
-	def progress() {
-		def jobs = request.JSON.jobs
-		List<ExcelJob> jobList
-		def progress = [:]
-		
-		if (jobs && jobs instanceof List) {
-			jobList = ExcelJob.getAll(jobs)
-		}
-			
-		jobList.each {
-			if (it) {
-				def p = (((double)it.step / (double)it.nSteps) * 100).round(2)
-				progress["${it.id}"] = p
-			}
-		}
-		
-		render progress
-	}
+
+    def progress() {
+        def jobs = request.JSON.jobs
+        List<ExcelJob> jobList
+        def progress = [:]
+
+        if (jobs && jobs instanceof List) {
+            jobList = ExcelJob.getAll(jobs)
+        }
+
+        jobList.each {
+            if (it) {
+                def p = (((double)it.step / (double)it.nSteps) * 100).round(2)
+                progress["${it.id}"] = p
+            }
+        }
+
+        render progress
+    }
 }

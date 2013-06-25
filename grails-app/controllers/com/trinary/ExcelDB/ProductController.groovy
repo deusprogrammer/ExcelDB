@@ -17,25 +17,25 @@ class ProductController {
         params.max = Math.min(params.max ? params.int('max') : 10, 100)
         [productInstanceList: Product.list(params), productInstanceTotal: Product.count()]
     }
-	
-	def listInvalidEntries() {
-		def offset = (params.offset ? params.offset : 0).toInteger()
-		def max = Math.min(params.max ? params.int('max') : 10, 100).toInteger()
-		
-		def lower = offset 
-		def upper = offset + max
-		
-		def missingCol1 = Product.findAllByProductNumber("")
-		def missingCol2 = Product.findAllByProductDescription("")
-		def missingCol3 = Product.findAllByProductPrice("")
-		def allInvalid = missingCol1 + missingCol2 + missingCol3
-		
-		println "LOWER: ${lower}"
-		println "UPPER: ${upper}"
-		allInvalid = allInvalid.subList(lower, upper)
-		
-		render(view: "list", model: [productInstanceList: allInvalid, productInstanceTotal: allInvalid.size()])
-	}
+
+    def listInvalidEntries() {
+        def offset = (params.offset ? params.offset : 0).toInteger()
+        def max = Math.min(params.max ? params.int('max') : 10, 100).toInteger()
+
+        def lower = offset
+        def upper = offset + max
+
+        def missingCol1 = Product.findAllByProductNumber("")
+        def missingCol2 = Product.findAllByProductDescription("")
+        def missingCol3 = Product.findAllByProductPrice("")
+        def allInvalid = missingCol1 + missingCol2 + missingCol3
+
+        println "LOWER: ${lower}"
+        println "UPPER: ${upper}"
+        allInvalid = allInvalid.subList(lower, upper)
+
+        render(view: "list", model: [productInstanceList: allInvalid, productInstanceTotal: allInvalid.size()])
+    }
 
     def create() {
         [productInstance: new Product(params)]
@@ -55,7 +55,7 @@ class ProductController {
     def show() {
         def productInstance = Product.get(params.id)
         if (!productInstance) {
-			flash.message = message(code: 'default.not.found.message', args: [message(code: 'product.label', default: 'Product'), params.id])
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'product.label', default: 'Product'), params.id])
             redirect(action: "list")
             return
         }
@@ -100,54 +100,54 @@ class ProductController {
             return
         }
 
-		flash.message = message(code: 'default.updated.message', args: [message(code: 'product.label', default: 'Product'), productInstance.id])
+        flash.message = message(code: 'default.updated.message', args: [message(code: 'product.label', default: 'Product'), productInstance.id])
         redirect(action: "show", id: productInstance.id)
     }
 
     def delete() {
         def productInstance = Product.get(params.id)
         if (!productInstance) {
-			flash.message = message(code: 'default.not.found.message', args: [message(code: 'product.label', default: 'Product'), params.id])
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'product.label', default: 'Product'), params.id])
             redirect(action: "list")
             return
         }
 
         try {
             productInstance.delete(flush: true)
-			flash.message = message(code: 'default.deleted.message', args: [message(code: 'product.label', default: 'Product'), params.id])
+            flash.message = message(code: 'default.deleted.message', args: [message(code: 'product.label', default: 'Product'), params.id])
             redirect(action: "list")
         }
         catch (DataIntegrityViolationException e) {
-			flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'product.label', default: 'Product'), params.id])
+            flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'product.label', default: 'Product'), params.id])
             redirect(action: "show", id: params.id)
         }
     }
-    
+
     def writeOut() {
-		def filePath
-		filePath = ExcelService.writeDBToFile()
-		redirect(uri: "/")
+        def filePath
+        filePath = ExcelService.writeDBToFile()
+        redirect(uri: "/")
     }
-	
-	def download(Long id) {
-		def job = ExportJob.get(id)
-		
-		if (job.done){ 
-			def file = new File(job.filename)
-			response.setHeader("Content-Type", "application/excel")
-			response.setHeader("Content-Disposition", "attachment; filename=${file.getName()}")
-			response.setHeader("Content-Length", "${file.size()}")
-	
-			response.outputStream << file.newInputStream()
-		} else {
-			response.status = 404
-		}
-		
-		return
-	}
-	
-	def reset() {
-		Product.executeUpdate('delete from Product')
-		redirect(uri: "/")
-	}
+
+    def download(Long id) {
+        def job = ExportJob.get(id)
+
+        if (job.done){
+            def file = new File(job.filename)
+            response.setHeader("Content-Type", "application/excel")
+            response.setHeader("Content-Disposition", "attachment; filename=${file.getName()}")
+            response.setHeader("Content-Length", "${file.size()}")
+
+            response.outputStream << file.newInputStream()
+        } else {
+            response.status = 404
+        }
+
+        return
+    }
+
+    def reset() {
+        Product.executeUpdate('delete from Product')
+        redirect(uri: "/")
+    }
 }

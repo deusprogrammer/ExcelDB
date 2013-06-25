@@ -28,14 +28,14 @@ class ExcelDBConfigController {
             return
         }
 
-		flash.message = message(code: 'default.created.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), excelDBConfigInstance.id])
+        flash.message = message(code: 'default.created.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), excelDBConfigInstance.id])
         redirect(action: "show", id: excelDBConfigInstance.id)
     }
 
     def show() {
         def excelDBConfigInstance = ExcelDBConfig.get(params.id)
         if (!excelDBConfigInstance) {
-			flash.message = message(code: 'default.not.found.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), params.id])
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), params.id])
             redirect(action: "list")
             return
         }
@@ -80,25 +80,25 @@ class ExcelDBConfigController {
             return
         }
 
-		flash.message = message(code: 'default.updated.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), excelDBConfigInstance.id])
+        flash.message = message(code: 'default.updated.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), excelDBConfigInstance.id])
         redirect(action: "show", id: excelDBConfigInstance.id)
     }
 
     def delete() {
         def excelDBConfigInstance = ExcelDBConfig.get(params.id)
         if (!excelDBConfigInstance) {
-			flash.message = message(code: 'default.not.found.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), params.id])
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), params.id])
             redirect(action: "list")
             return
         }
 
         try {
             excelDBConfigInstance.delete(flush: true)
-			flash.message = message(code: 'default.deleted.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), params.id])
+            flash.message = message(code: 'default.deleted.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), params.id])
             redirect(action: "list")
         }
         catch (DataIntegrityViolationException e) {
-			flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), params.id])
+            flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'excelDBConfig.label', default: 'ExcelDBConfig'), params.id])
             redirect(action: "show", id: params.id)
         }
     }

@@ -18,7 +18,7 @@ import org.grails.jaxrs.response.Responses.*
 @Path('/api/excel')
 class ExcelResource {
     def ExcelService
-    
+
     @GET
     @Path('/parseLocal')
     @Produces('text/plain')
