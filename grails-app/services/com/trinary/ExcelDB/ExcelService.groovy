@@ -379,6 +379,7 @@ class ExcelService {
                 }
             } catch (Exception e) {
                 println "EXCEPTION: ${e.getMessage()}"
+                setExportDone(exportJobId, "Failed")
             }
 
             sheet.autoSizeColumn(0)
