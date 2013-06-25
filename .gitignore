@@ -1,2 +1,4 @@
 .class
 .war
+target/
+target-eclipse/
