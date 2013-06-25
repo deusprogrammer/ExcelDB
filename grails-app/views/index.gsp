@@ -139,8 +139,14 @@
                     <div class="sub-item">
                     	There are currently <b>${Product.count()}</b> products in the database.<br/>
                         <g:link controller="product" action="list">Product List</g:link><br/>
-                        <g:link controller="product" action="reset" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');">Reset Database</g:link><br/>
-                        <g:link controller="product" action="writeOut">Request Excel Spreadsheet</g:link><br/>
+                        <g:if test="${ExcelJob.findAllByStatusNotEqual("Success").size() == 0}">
+                            <g:link controller="product" action="reset" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');">Reset Database</g:link><br/>
+                            <g:link controller="product" action="writeOut">Request Excel Spreadsheet</g:link><br/>
+                        </g:if>
+                        <g:else>
+                            <font color="gray">Reset Database</font><br/>
+                            <font color="gray">Request Excel Spreadsheet</font><br/>
+                        </g:else>
                         <div class="sub-item">
                         	<g:if test="${ExportJob.count() > 0}">
                         		<%
