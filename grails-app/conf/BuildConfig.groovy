@@ -25,15 +25,15 @@ grails.project.dependency.resolution = {
         // uncomment these to enable remote dependency resolution from public Maven repositories
         //mavenCentral()
         //mavenLocal()
-		mavenRepo "http://poi.apache.org/"
-		mavenRepo "http://www.lingala.net/zip4j/"
+        mavenRepo "http://poi.apache.org/"
+        mavenRepo "http://www.lingala.net/zip4j/"
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
         // runtime 'mysql:mysql-connector-java:5.1.16'
-		compile 'org.apache.poi:poi-ooxml:3.9'
-		compile 'net.lingala.zip4j:zip4j:1.3.1'
+        compile 'org.apache.poi:poi-ooxml:3.9'
+        compile 'net.lingala.zip4j:zip4j:1.3.1'
     }
 
     plugins {
