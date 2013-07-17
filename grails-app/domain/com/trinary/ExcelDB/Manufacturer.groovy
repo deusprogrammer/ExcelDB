@@ -10,4 +10,8 @@ class Manufacturer {
         manufacturerCode nullable: true
         manufacturerName nullable: true
     }
+	
+	static mapping = {
+		products lazy: false
+	}
 }

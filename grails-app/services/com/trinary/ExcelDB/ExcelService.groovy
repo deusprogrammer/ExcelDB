@@ -6,15 +6,20 @@ import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
-import org.apache.poi.hssf.usermodel.HSSFWorkbook
-import org.apache.poi.hssf.usermodel.HSSFSheet
-import org.apache.poi.hssf.usermodel.HSSFCell
+
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.xssf.usermodel.XSSFSheet
+import org.apache.poi.xssf.usermodel.XSSFCell
+
+import org.apache.poi.xssf.streaming.SXSSFWorkbook
+import org.apache.poi.xssf.streaming.SXSSFSheet
+import org.apache.poi.xssf.streaming.SXSSFCell
 
 import java.text.SimpleDateFormat
 
-import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
-
 class ExcelService {
+	def grailsApplication
+	
     //DB Helper functions
     protected Object lock = new Object()
 
@@ -323,6 +328,7 @@ class ExcelService {
     }
 
     def writeDBToFile() {
+		def manufacturers = Manufacturer.list()
         def products = Product.list()
         def markupValue = ExcelDBConfig.findByConfigKey("markupPercentage")
         def markup
@@ -331,7 +337,7 @@ class ExcelService {
         def sdf = new SimpleDateFormat("yyyyMMddHHmmss")
         def time = sdf.format(date.getTime())
 
-        def filePath = CH.config.excel.root + time + ".xls"
+        def filePath = grailsApplication.config.excel.root + time + ".xlsx"
 
         def exportJob = new ExportJob(step: 0, steps: Product.count(), filename: filePath)
         exportJob.save(flush: true)
@@ -342,7 +348,7 @@ class ExcelService {
                 markup = markupValue.configValue.toDouble()
             }
 
-            def workbook = new HSSFWorkbook()
+            def workbook = new SXSSFWorkbook()
             def sheet = workbook.createSheet()
 
             //Write header
@@ -356,30 +362,36 @@ class ExcelService {
             row.createCell(6).setCellValue("OEM_PART_NO")
             row.createCell(7).setCellValue("DESCRIPTION")
             row.createCell(8).setCellValue("DAYS ARO")
+			
+			def i = 1
 
             try {
-                products.eachWithIndex { product, i ->
-                    row = sheet.createRow(i + 1)
-                    def productNumber = product.productNumber
-                    def productManufacturer = product.manufacturer.manufacturerName
-                    def productPrice = (product.productPrice.toString().toDouble() * (1.0 + markup)).round(2)
-
-                    println "WRITING PRODUCT: ${product.productNumber} (${product.oemProductNumber})"
-
-                    row.createCell(0).setCellValue(productNumber)
-                    row.createCell(1).setCellValue(product.productName)
-                    row.createCell(2).setCellValue("\$" + productPrice)
-                    row.createCell(3).setCellValue("EA")
-                    row.createCell(4).setCellValue("1")
-                    row.createCell(5).setCellValue(productManufacturer)
-                    row.createCell(6).setCellValue(product.oemProductNumber)
-                    row.createCell(7).setCellValue(productManufacturer + "- " + product.productDescription)
-                    row.createCell(8).setCellValue("14")
-                    incrementExportStep(exportJobId)
-                }
+				manufacturers.each { manufacturer ->
+					println "MANUFACTURER: ${manufacturer.manufacturerName}"
+	                manufacturer.products.each { product ->
+	                    row = sheet.createRow(i++)
+	                    def productNumber = product.productNumber
+	                    def productManufacturer = product.manufacturer.manufacturerName
+	                    def productPrice = (product.productPrice.toString().toDouble() * (1.0 + markup)).round(2)
+	
+	                    println "\tWRITING PRODUCT: ${product.productNumber} (${product.oemProductNumber})"
+	
+	                    row.createCell(0).setCellValue(productNumber)
+	                    row.createCell(1).setCellValue(product.productName)
+	                    row.createCell(2).setCellValue("\$" + productPrice)
+	                    row.createCell(3).setCellValue("EA")
+	                    row.createCell(4).setCellValue("1")
+	                    row.createCell(5).setCellValue(productManufacturer)
+	                    row.createCell(6).setCellValue(product.oemProductNumber)
+	                    row.createCell(7).setCellValue(productManufacturer + "- " + product.productDescription)
+	                    row.createCell(8).setCellValue("14")
+	                    incrementExportStep(exportJobId)
+	                }
+				}
             } catch (Exception e) {
                 println "EXCEPTION: ${e.getMessage()}"
                 setExportDone(exportJobId, "Failed")
+				return
             }
 
             sheet.autoSizeColumn(0)
@@ -392,9 +404,15 @@ class ExcelService {
             sheet.autoSizeColumn(7)
             sheet.autoSizeColumn(8)
 
-            def fileOut = new FileOutputStream(filePath)
-            workbook.write(fileOut)
-            fileOut.close()
+			try {
+	            def fileOut = new FileOutputStream(filePath)
+	            workbook.write(fileOut)
+	            fileOut.close()
+			} catch (Exception e) {
+				println "Unable to write out file!"
+				println "EXCEPTION: ${e.getMessage()}"
+				setExportDone(exportJobId, "Failed")
+			}
 
             setExportDone(exportJobId, "Success")
         }
