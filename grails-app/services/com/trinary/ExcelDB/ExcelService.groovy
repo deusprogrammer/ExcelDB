@@ -382,7 +382,7 @@ class ExcelService {
                         row.createCell(3).setCellValue("EA")
                         row.createCell(4).setCellValue("1")
                         row.createCell(5).setCellValue(productManufacturer)
-                        row.createCell(6).setCellValue(product.oemProductNumber)
+                        row.createCell(6).setCellValue(product.oemProductNumber.replaceAll(/^[A-Za-z0-9]{3}-/, ""))
                         row.createCell(7).setCellValue(productManufacturer + "- " + product.productDescription)
                         row.createCell(8).setCellValue("14")
                         incrementExportStep(exportJobId)
